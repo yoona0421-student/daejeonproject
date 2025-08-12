@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>대전 어린이 안전 대시보드</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="replit-ui.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
+  <style>
+body {
+  background: #f5f6fa;
+  font-family: 'Pretendard', 'Noto Sans KR', sans-serif;
+  margin: 0;
+}
+.main-header {
+  background: #fff;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+  padding: 28px 48px 18px 48px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+.header-title-group h1 {
+  font-size: 2.1em;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+.header-title-group .subtitle {
+  font-size: 1.08em;
+  color: #888;
+  margin-left: 2px;
+}
+#floatingReportBtn {
+  position: absolute;
+  top: 32px;
+  right: 48px;
+  z-index: 1200;
+  background: linear-gradient(90deg, #ffe066 60%, #a8e063 100%);
+  color: #34495e;
+  border: none;
+  padding: 12px 32px;
+  border-radius: 50px;
+  font-size: 1.08em;
+  font-weight: 600;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.10);
+  cursor: pointer;
+  transition: box-shadow 0.2s, transform 0.1s;
+}
+#floatingReportBtn:hover {
+  box-shadow: 0 4px 24px rgba(0,0,0,0.16);
+  transform: translateY(-2px) scale(1.04);
+}
+.nav-bar {
+  background: #fff;
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  padding: 0 48px;
+  height: 54px;
+  border-bottom: 1.5px solid #eee;
+  font-size: 1.08em;
+  font-weight: 500;
+}
+.nav-bar .nav-item {
+  color: #34495e;
+  cursor: pointer;
+  padding: 0 12px;
+  border-radius: 8px;
+  transition: background 0.15s;
+}
+.nav-bar .nav-item:hover {
+  background: #ffe06633;
+}
+.main-layout {
+  display: flex;
+  gap: 32px;
+  padding: 32px 48px 0 48px;
+  min-height: 80vh;
+}
+.sidebar {
+  width: 340px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+.card.safety-stats, .mini-news-alert {
+  background: #fff;
+  border-radius: 18px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+  border: 2px solid #ffe066;
+  font-family: 'Pretendard', 'Noto Sans KR', sans-serif;
+  padding: 20px 18px 16px 18px;
+  max-width: 320px;
+  text-align: center;
+  position: relative;
+}
+.dream-family {
+  position: absolute;
+  left: -32px;
+  top: -24px;
+  width: 56px;
+  height: auto;
+  z-index: 2;
+}
+.mini-news-alert {
+  height: 800px;
+  margin-top: 0;
+}
+.mini-news-title {
+  font-size: 1.08em;
+  font-weight: 600;
+  margin-bottom: 10px;
+  color: #34495e;
+}
+#mini-news-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.map-box {
+  flex: 1;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  position: relative;
+}
+#daejeon-map {
+  width: 100%;
+  height: 800px;
+  border-radius: 28px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.10);
+  border: none;
+}
+.dream-family-map {
+  position: absolute;
+  right: 24px;
+  bottom: 24px;
+  width: 80px;
+  height: auto;
+  z-index: 10;
+}
+.community-section {
+  background: #fff;
+  border-radius: 18px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+  border: 2px solid #a8e063;
+  padding: 24px 18px;
+  max-width: 900px;
+  margin: 32px auto;
+  font-family: 'Pretendard', 'Noto Sans KR', sans-serif;
+}
+.community-title {
+  font-size: 1.3em;
+  font-weight: 700;
+  margin-bottom: 18px;
+  color: #27ae60;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.community-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+}
+.community-card {
+  background: #f8fff0;
+  border-radius: 14px;
+  box-shadow: 0 2px 8px rgba(168,224,99,0.10);
+  border: 1.5px solid #a8e063;
+  padding: 16px 14px;
+  min-width: 220px;
+  max-width: 260px;
+  font-size: 1em;
+  position: relative;
+}
+.community-card .dream-family {
+  left: -18px;
+  top: -18px;
+  width: 38px;
+}
+footer {
+  background: #fff;
+  color: #888;
+  text-align: center;
+  padding: 18px 0 12px 0;
+  font-size: 1em;
+  box-shadow: 0 -2px 12px rgba(0,0,0,0.04);
+  margin-top: 32px;
+}
+/* 안전 제보 모달 귀여운 스타일 */
+#reportModal > div {
+  background: linear-gradient(135deg, #fffbe6 60%, #eaffd0 100%);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.10);
+  border-radius: 18px;
+  font-family: 'Gowun Dodum', 'Pretendard', 'Noto Sans KR', sans-serif;
+  border: 2px solid #ffe066;
+}
+#reportModal h3 {
+  font-size: 1.5em;
+  font-weight: bold;
+  color: #f7b731;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+#reportModal img {
+  vertical-align: middle;
+  margin-right: 4px;
+}
+#reportModal label {
+  color: #6c757d;
+  font-weight: 500;
+}
+#reportModal select, #reportModal textarea {
+  border-radius: 10px;
+  border: 1.5px solid #ffe066;
+  background: #fff;
+  font-size: 1em;
+  margin-bottom: 10px;
+  box-shadow: 0 2px 8px rgba(247,183,49,0.07);
+}
+#reportModal textarea {
+  resize: vertical;
+}
+#imageDropZone {
+  border: 2px dashed #ffe066;
+  background: #fffbe6;
+  color: #b2b200;
+  font-size: 1em;
+  transition: background 0.2s;
+}
+#imageDropZone:hover {
+  background: #fffde7;
+  border-color: #f7b731;
+}
+#previewImage img {
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(247,183,49,0.12);
+}
+#reportModal button[type="submit"] {
+  background: linear-gradient(90deg, #f7b731 60%, #b2f7b8 100%);
+  color: #fff;
+  font-weight: bold;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 22px;
+  font-size: 1em;
+  box-shadow: 0 2px 8px rgba(247,183,49,0.10);
+  transition: transform 0.1s, background 0.2s;
+}
+#reportModal button[type="submit"]:hover {
+  transform: scale(1.05);
+  background: linear-gradient(90deg, #ffe066 60%, #b2f7b8 100%);
+}
+#reportModal button#cancelBtn {
+  background: #f7f7f7;
+  color: #888;
+  border-radius: 8px;
+  border: none;
+  padding: 8px 22px;
+  font-size: 1em;
+  margin-right: 8px;
+  box-shadow: 0 2px 8px rgba(247,183,49,0.07);
+}
+#reportModal button#closeModal {
+  font-size: 1.5em;
+  color: #f7b731;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+/* 안전 통계 귀여운 스타일 */
+.card.safety-stats {
+  background: linear-gradient(135deg, #fffbe6 60%, #eaffd0 100%);
+  border-radius: 18px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+  border: 2px solid #ffe066;
+  font-family: 'Gowun Dodum', 'Pretendard', 'Noto Sans KR', sans-serif;
+  padding: 16px 10px 12px 10px;
+  max-width: 320px;
+  text-align: center;
+}
+.card.safety-stats h2 {
+  font-size: 1.08em;
+  margin-bottom: 6px;
+}
+.card.safety-stats h3 {
+  font-size: 1em;
+  margin-bottom: 8px;
+}
+.safety-stats .hospital-grid {
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.safety-stats .hospital-card {
+  border-radius: 8px;
+  padding: 8px 12px;
+  min-width: 70px;
+  font-size: 0.98em;
+}
+.safety-stats .hospital-card .emoji {
+  font-size: 1.1em;
+}
+.safety-stats .hospital-card .gu {
+  font-size: 1em;
+}
+.safety-stats .hospital-card .count {
+  font-size: 1em;
+}
+.safety-stats .top5-risk-list {
+  padding-left: 0;
+  text-align: center;
+}
+.safety-stats .top5-risk-list li {
+  justify-content: center;
+  margin-bottom: 7px;
+  font-size: 0.98em;
+  gap: 4px;
+}
+.safety-stats .top5-risk-list .rank {
+  font-size: 1em;
+}
+.safety-stats .top5-risk-list .risk-emoji {
+  font-size: 1em;
+}
+.safety-stats .top5-risk-list .type {
+  font-size: 0.92em;
+  padding: 2px 6px;
+}
+.safety-stats .top5-risk-list .count {
+  font-size: 0.95em;
+}
+.safety-stats .hospital-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 18px 0;
+}
+.safety-stats .hospital-list li {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 1.08em;
+  margin-bottom: 8px;
+}
+.safety-stats .divider {
+  border: none;
+  border-top: 2px dashed #ffe066;
+  margin: 16px 0;
+}
+#floatingReportBtn {
+  position: absolute;
+  top: 24px;
+  right: 32px;
+  z-index: 1200;
+  background: #e67e22;
+  color: #fff;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 50px;
+  font-size: 18px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+  cursor: pointer;
+}
+</style>
+</head>
+<body>
+  <!-- 안전 제보하기 모달 -->
+  <!-- 안전 제보하기 모달 -->
+  <div id="reportModal" style="display:none; position:fixed; left:0; top:0; width:100vw; height:100vh; background:rgba(0,0,0,0.18); z-index:2000; align-items:center; justify-content:center;">
+    <div style="background:#fff; border-radius:18px; box-shadow:0 8px 32px rgba(0,0,0,0.10); padding:38px 32px 32px 32px; min-width:340px; max-width:98vw; position:relative;">
+      <button id="closeModal" style="position:absolute; top:18px; right:18px; background:none; border:none; font-size:1.6em; color:#888; cursor:pointer;">&times;</button>
+      <h2 style="margin-top:0; margin-bottom:18px; font-size:1.6em; font-weight:700; color:#222; display:flex; align-items:center; gap:8px;">
+  <img src="dream_family_01.png" alt="번개" style="height:56px; width:auto; vertical-align:middle;"> 안전 제보하기
+      </h2>
+      <form id="reportForm">
+        <label for="reportType" style="font-weight:600; color:#444;">제보 유형</label><br>
+        <select id="reportType" required style="width:100%; margin-bottom:18px; padding:8px; border-radius:8px; border:1.5px solid #ffe066;">
+          <option value="">제보 유형을 선택하세요</option>
+          <option value="교통 위험">교통 위험</option>
+          <option value="시설 위험">시설 위험</option>
+          <option value="기타">기타</option>
+        </select>
+        <label for="district" style="font-weight:600; color:#444;">대전광역시 구</label><br>
+        <select id="district" required style="width:100%; margin-bottom:18px; padding:8px; border-radius:8px; border:1.5px solid #ffe066;">
+          <option value="">구를 선택하세요</option>
+          <option value="동구">동구</option>
+          <option value="중구">중구</option>
+          <option value="서구">서구</option>
+          <option value="유성구">유성구</option>
+          <option value="대덕구">대덕구</option>
+        </select>
+        <label for="content" style="font-weight:600; color:#444;">내용</label><br>
+        <textarea id="content" rows="4" required style="width:100%; margin-bottom:18px; padding:8px; border-radius:8px; border:1.5px solid #ffe066;"></textarea>
+        <label style="font-weight:600; color:#444;">사진 첨부 (선택)</label><br>
+        <div id="imageDropZone" style="border:2px dashed #ffe066; background:#fffbe6; color:#b2b200; font-size:1em; border-radius:10px; padding:18px; text-align:center; margin-bottom:18px; cursor:pointer;">
+          <span id="imageDropText">사진을 드래그하거나 클릭하여 업로드</span>
+          <input type="file" id="imageInput" accept="image/*" style="display:none;">
+          <div id="previewImage" style="display:none; margin-top:8px;"></div>
+        </div>
+        <div style="display:flex; gap:12px; justify-content:flex-end; margin-top:18px;">
+          <button type="button" id="cancelBtn" style="background:#eee; color:#444; border:none; border-radius:8px; padding:8px 22px; font-size:1em; cursor:pointer;">취소</button>
+          <button type="submit" style="background:#6fcf97; color:#fff; border:none; border-radius:8px; padding:8px 22px; font-size:1em; font-weight:600; cursor:pointer;">제보하기</button>
+        </div>
+      </form>
+    </div>
+  </div>
+  <!-- 네비게이션 바 추가 -->
+  <nav class="nav-bar">
+    <img src="daejeon_logo.png" alt="대전 로고" style="height:200px; margin-right:18px; width:auto;">
+      <span class="nav-item">정보공개</span>
+      <span class="nav-item">참여마당</span>
+      <span class="nav-item">전자민원</span>
+      <span class="nav-item">행정정보</span>
+      <span class="nav-item">생활정보</span>
+      <span class="nav-item">대전소개</span>
+      <span class="nav-item">분야별정보</span>
+      <a class="nav-item" href="community.html" style="background:#fff8dc; padding:6px 18px; border-radius:12px; font-weight:600; color:#222; text-decoration:none;">커뮤니티</a>
+  </nav>
+  <header class="main-header">
+    <div class="header-left">
+      <img src="꿈돌이.png" alt="꿈돌이" class="dreamdori-animate" style="height:50px; margin-right:10px; width:auto; aspect-ratio:1/1;">
+      <div class="header-title-group">
+        <h1>대안책(대전 안전 Check) - 어린이 보호 사각지대 밀도기반 군집분석 웹 서비스</h1>
+        <div class="subtitle">꿈돌이와 함께하는 안전한 통학로</div>
+      </div>
+    </div>
+    <!-- 헤더에서 안전제보하기 버튼 제거 -->
+  </header>
+    <div class="main-layout">
+    <aside class="sidebar">
+  <!-- 실시간 안전 알림 카테고리 제거 -->
+  <!-- 오른쪽 하단 고정 안전제보하기 버튼 -->
+    <button id="floatingReportBtn" style="position:fixed; right:32px; top:80px; z-index:1200; background:#6fcf97; color:#fff; border:2px solid #27ae60; padding:16px 28px; border-radius:50px; font-size:18px; font-family:'Gowun Dodum','Pretendard','Noto Sans KR',sans-serif; box-shadow:0 4px 16px rgba(0,0,0,0.12); cursor:pointer;">안전 제보하기</button>
+
+
+
+    <!-- 3단 레이아웃: 왼쪽 블록(20%) + 지도(60%) + 레이어 제어 패널(20%) -->
+  <div class="main-3col-layout" style="display:flex; flex-direction:row; gap:36px; width:100vw; min-height:80vh;">
+      <!-- 왼쪽 안전 통계/뉴스 알림 박스 복구 -->
+      <aside class="sidebar" style="flex:2; min-width:220px; max-width:320px; padding:32px 12px 32px 24px; background:#fff; border-radius:24px; box-shadow:0 2px 12px rgba(0,0,0,0.07); margin:18px 0 18px 0; display:flex; flex-direction:column; gap:24px; align-items:stretch;">
+        <section class="card safety-stats" style="padding-top:10px; background:#fffbe6; border:2px solid #ffe066;">
+          <img src="dream_family_02.png" class="dream-family" alt="dream family 02" style="width:38px; left:-18px; top:-18px;">
+          <h2 style="margin-top:0; margin-bottom:12px; font-size:1.22em; font-weight:700; color:#888;">안전 통계</h2>
+          <div id="hospital-stats" style="margin-bottom:24px; text-align:center; font-size:1.08em;">
+            <div style="margin-bottom:8px; font-weight:600; color:#444;">구별 병원/응급시설 현황</div>
+            <ul style="list-style:none; padding-left:0; margin-bottom:12px;">
+              <li style="margin-bottom:4px;"><span style="font-size:1.1em;">📑</span> <span style="color:#d35400; font-weight:600;">동구 1 개</span></li>
+              <li style="margin-bottom:4px;"><span style="font-size:1.1em;">📑</span> <span style="color:#8e44ad; font-weight:600;">중구 1 개</span></li>
+              <li style="margin-bottom:4px;"><span style="font-size:1.1em;">📑</span> <span style="color:#2980b9; font-weight:600;">서구 3 개</span></li>
+              <li style="margin-bottom:4px;"><span style="font-size:1.1em;">📑</span> <span style="color:#27ae60; font-weight:600;">유성구 1 개</span></li>
+              <li style="margin-bottom:4px;"><span style="font-size:1.1em;">📑</span> <span style="color:#7f8c8d; font-weight:600;">대덕구 2 개</span></li>
+            </ul>
+            <hr style="border:none; border-top:2px dashed #ffe066; margin:16px 0;">
+          </div>
+          <div id="top5-risk" style="margin-bottom:8px; text-align:center; font-size:1.08em;">
+            <div style="margin-bottom:8px; font-weight:700; color:#444;">위험지역 <span style="color:#e67e22;">TOP5</span></div>
+            <ol style="padding-left:18px; margin-bottom:0; text-align:left;">
+              <li style="margin-bottom:4px;"><span style="font-size:1.1em;">⚠️</span> <span style="color:#e67e22; font-weight:600;">서구 둔산동</span> <span style="color:#888;">교통 위험</span> <span style="color:#222;">8건</span></li>
+              <li style="margin-bottom:4px;"><span style="font-size:1.1em;">🏫</span> <span style="color:#b5651d; font-weight:600;">유성구 봉명동</span> <span style="color:#888;">시설 위험</span> <span style="color:#222;">6건</span></li>
+              <li style="margin-bottom:4px;"><span style="font-size:1.1em;">⚠️</span> <span style="color:#f7b731; font-weight:600;">대덕구 신탄진동</span> <span style="color:#888;">교통 위험</span> <span style="color:#222;">5건</span></li>
+              <li style="margin-bottom:4px;"><span style="font-size:1.1em;">🏫</span> <span style="color:#b5651d; font-weight:600;">서구 괴정동</span> <span style="color:#888;">시설 위험</span> <span style="color:#222;">4건</span></li>
+              <li style="margin-bottom:4px;"><span style="font-size:1.1em;">5.</span> <span style="color:#2980b9; font-weight:600;">중구 대사동</span> <span style="color:#888;">기타</span> <span style="color:#222;">3건</span></li>
+            </ol>
+          </div>
+        </section>
+        <section class="mini-news-alert" style="height:220px; overflow-y:auto;">
+          <img src="dream_family_04.png" class="dream-family" alt="dream family 04" style="width:28px; left:-12px; top:-12px;">
+          <h3 class="mini-news-title">실시간 뉴스 알림</h3>
+          <div id="mini-news-list">
+            <!-- JS로 실시간 뉴스 기사 추가 -->
+          </div>
+        </section>
+      </aside>
+      <!-- 가운데 지도 영역(가로폭 대폭 축소) -->
+      <div class="map-col" style="flex:4; min-width:240px; max-width:840px; display:flex; flex-direction:column; align-items:center; justify-content:flex-start;">
+        <iframe id="daejeon-map" src="hotspots_risk_preview (15).html" width="640" height="800" frameborder="0" style="border-radius:28px; border:none; margin-top:18px;"></iframe>
+        <img src="dream_family_11.png" class="dream-family-map" alt="dream family 11" style="width:64px; right:18px; bottom:18px;">
+      </div>
+      <!-- 오른쪽 레이어 제어 패널 -->
+  <div class="layer-control-panel" style="flex:2; min-width:220px; max-width:350px; padding:32px 18px 32px 18px; background:#fffbe6; border-radius:24px; box-shadow:0 4px 24px rgba(0,0,0,0.10); border:2px solid #ffe066; margin:18px 0 18px 0; display:flex; flex-direction:column; gap:10px; align-items:stretch;">
+        <!-- 분석 유형 -->
+  <div class="layer-category-box" style="padding:18px 16px; border:1.5px solid #ffe066; border-radius:16px; margin-bottom:8px; background:#fff;">
+          <h3 style="margin-top:0; margin-bottom:12px; color:#f7b731; font-size:1.08em;">분석 유형</h3>
+          <label><input type="checkbox" class="layer-checkbox" data-layer="layer0" checked> 사고·전체 (비보호구역)</label><br>
+          <label><input type="checkbox" class="layer-checkbox" data-layer="layer1" checked> 클러스터(위험도, 비보호구역)</label>
+        </div>
+        <!-- 법규 위반 -->
+        <div class="layer-category-box" style="padding:18px 16px; border:1.5px solid #ffe066; border-radius:16px; margin-bottom:18px; background:#fff;">
+          <h3 style="margin-top:0; margin-bottom:12px; color:#f7b731; font-size:1.08em;">법규 위반</h3>
+          <label><input type="checkbox" class="layer-checkbox" data-layer="layer2" checked> 법규위반·안전운전불이행 (비보호구역)</label><br>
+          <label><input type="checkbox" class="layer-checkbox" data-layer="layer3" checked> 법규위반·보행자보호의무위반 (비보호구역)</label><br>
+          <label><input type="checkbox" class="layer-checkbox" data-layer="layer4" checked> 법규위반·신호위반 (비보호구역)</label><br>
+          <label><input type="checkbox" class="layer-checkbox" data-layer="layer5" checked> 법규위반·기타 (비보호구역)</label><br>
+          <label><input type="checkbox" class="layer-checkbox" data-layer="layer6" checked> 법규위반·중앙선침범 (비보호구역)</label><br>
+          <label><input type="checkbox" class="layer-checkbox" data-layer="layer7" checked> 법규위반·안전거리미확보 (비보호구역)</label><br>
+          <label><input type="checkbox" class="layer-checkbox" data-layer="layer8" checked> 법규위반·교차로운행방법위반 (비보호구역)</label>
+        </div>
+        <!-- 도로 환경 -->
+        <div class="layer-category-box" style="padding:18px 16px; border:1.5px solid #ffe066; border-radius:16px; margin-bottom:18px; background:#fff;">
+          <h3 style="margin-top:0; margin-bottom:12px; color:#f7b731; font-size:1.08em;">도로 환경</h3>
+          <label><input type="checkbox" class="layer-checkbox" data-layer="layer9" checked> 노면상태·건조 (비보호구역)</label><br>
+          <label><input type="checkbox" class="layer-checkbox" data-layer="layer10" checked> 노면상태·젖음/습기 (비보호구역)</label><br>
+          <label><input type="checkbox" class="layer-checkbox" data-layer="layer11" checked> 노면상태·서리/결빙 (비보호구역)</label><br>
+          <label><input type="checkbox" class="layer-checkbox" data-layer="layer12" checked> 기상상태·맑음 (비보호구역)</label><br>
+          <label><input type="checkbox" class="layer-checkbox" data-layer="layer13" checked> 기상상태·비 (비보호구역)</label><br>
+          <label><input type="checkbox" class="layer-checkbox" data-layer="layer14" checked> 기상상태·흐림 (비보호구역)</label>
+        </div>
+        <!-- 도로 형태 -->
+        <div class="layer-category-box" style="padding:18px 16px; border:1.5px solid #ffe066; border-radius:16px; margin-bottom:18px; background:#fff;">
+          <h3 style="margin-top:0; margin-bottom:12px; color:#f7b731; font-size:1.08em;">도로 형태</h3>
+          <label><input type="checkbox" class="layer-checkbox" data-layer="layer15" checked> 도로형태·단일로 - 기타 (비보호구역)</label><br>
+          <label><input type="checkbox" class="layer-checkbox" data-layer="layer16" checked> 도로형태·교차로 - 교차로횡단보도내 (비보호구역)</label><br>
+          <label><input type="checkbox" class="layer-checkbox" data-layer="layer17" checked> 도로형태·교차로 - 교차로안 (비보호구역)</label><br>
+          <label><input type="checkbox" class="layer-checkbox" data-layer="layer18" checked> 도로형태·교차로 - 교차로부근 (비보호구역)</label><br>
+          <label><input type="checkbox" class="layer-checkbox" data-layer="layer19" checked> 도로형태·기타 - 기타 (비보호구역)</label><br>
+          <label><input type="checkbox" class="layer-checkbox" data-layer="layer20" checked> 도로형태·단일로 - 횡단보도상 (비보호구역)</label><br>
+          <label><input type="checkbox" class="layer-checkbox" data-layer="layer21" checked> 도로형태·단일로 - 횡단보도부근 (비보호구역)</label><br>
+          <label><input type="checkbox" class="layer-checkbox" data-layer="layer22" checked> 도로형태·단일로 - 고가도로위 (비보호구역)</label><br>
+          <label><input type="checkbox" class="layer-checkbox" data-layer="layer23" checked> 도로형태·주차장 - 주차장 (비보호구역)</label><br>
+          <label><input type="checkbox" class="layer-checkbox" data-layer="layer24" checked> 도로형태·단일로 - 지하차도(도로)내 (비보호구역)</label>
+        </div>
+        <!-- 복합 조건 (위반+환경) -->
+        <div class="layer-category-box" style="padding:18px 16px; border:1.5px solid #ffe066; border-radius:16px; margin-bottom:18px; background:#fff;">
+          <h3 style="margin-top:0; margin-bottom:12px; color:#f7b731; font-size:1.08em;">복합 조건 (위반+환경)</h3>
+          <label><input type="checkbox" class="layer-checkbox" data-layer="layer25" checked> 법규위반∧기상상태 ∧ 안전운전불이행 · 맑음 (비보호구역)</label><br>
+          <label><input type="checkbox" class="layer-checkbox" data-layer="layer26" checked> 법규위반∧기상상태 ∧ 보행자보호의무위반 · 맑음 (비보호구역)</label><br>
+          <label><input type="checkbox" class="layer-checkbox" data-layer="layer27" checked> 법규위반∧기상상태 ∧ 신호위반 · 맑음 (비보호구역)</label><br>
+          <label><input type="checkbox" class="layer-checkbox" data-layer="layer28" checked> 법규위반∧기상상태 ∧ 기타 · 맑음 (비보호구역)</label><br>
+          <label><input type="checkbox" class="layer-checkbox" data-layer="layer29" checked> 법규위반∧기상상태 ∧ 안전운전불이행 · 비 (비보호구역)</label><br>
+          <label><input type="checkbox" class="layer-checkbox" data-layer="layer30" checked> 법규위반∧기상상태 ∧ 안전운전불이행 · 흐림 (비보호구역)</label><br>
+          <label><input type="checkbox" class="layer-checkbox" data-layer="layer31" checked> 법규위반∧기상상태 ∧ 보행자보호의무위반 · 비 (비보호구역)</label><br>
+          <label><input type="checkbox" class="layer-checkbox" data-layer="layer32" checked> 법규위반∧기상상태 ∧ 중앙선침범 · 맑음 (비보호구역)</label><br>
+          <label><input type="checkbox" class="layer-checkbox" data-layer="layer33" checked> 법규위반∧기상상태 ∧ 안전거리미확보 · 맑음 (비보호구역)</label><br>
+          <label><input type="checkbox" class="layer-checkbox" data-layer="layer34" checked> 법규위반∧기상상태 ∧ 신호위반 · 흐림 (비보호구역)</label><br>
+          <label><input type="checkbox" class="layer-checkbox" data-layer="layer35" checked> 법규위반∧기상상태 ∧ 보행자보호의무위반 · 흐림 (비보호구역)</label><br>
+          <label><input type="checkbox" class="layer-checkbox" data-layer="layer36" checked> 법규위반∧기상상태 ∧ 교차로운행방법위반 · 맑음 (비보호구역)</label><br>
+          <label><input type="checkbox" class="layer-checkbox" data-layer="layer37" checked> 법규위반∧기상상태 ∧ 신호위반 · 비 (비보호구역)</label><br>
+          <label><input type="checkbox" class="layer-checkbox" data-layer="layer38" checked> 법규위반∧기상상태 ∧ 기타 · 비 (비보호구역)</label><br>
+          <label><input type="checkbox" class="layer-checkbox" data-layer="layer39" checked> 법규위반∧기상상태 ∧ 안전거리미확보 · 흐림 (비보호구역)</label><br>
+          <label><input type="checkbox" class="layer-checkbox" data-layer="layer40" checked> 법규위반∧기상상태 ∧ 중앙선침범 · 비 (비보호구역)</label>
+        </div>
+      </div>
+    </div>
+  </section>
+    </main>
+    </div>
+    <script>
+    // 병원/응급시설 현황 데이터 (샘플, 실제는 CSV에서 파싱)
+    const hospitalData = [
+      { gu: '동구', count: 1 },
+      { gu: '중구', count: 1 },
+      { gu: '서구', count: 3 },
+      { gu: '유성구', count: 1 },
+      { gu: '대덕구', count: 2 }
+    ];
+
+    // 비보호구역 레이어 항목 전체 (사용자 요청 기반)
+    const layerItems = [
+      '사고 점(전체: 비보호구역)',
+      '클러스터(위험도, 비보호구역)',
+      '법규위반 · 안전운전불이행 (비보호구역)',
+      '법규위반 · 보행자보호의무위반 (비보호구역)',
+      '법규위반 · 신호위반 (비보호구역)',
+      '법규위반 · 기타 (비보호구역)',
+      '법규위반 · 중앙선침범 (비보호구역)',
+      '법규위반 · 안전거리미확보 (비보호구역)',
+      '법규위반 · 교차로운행방법위반 (비보호구역)',
+      '노면상태 · 건조 (비보호구역)',
+      '노면상태 · 젖음/습기 (비보호구역)',
+      '노면상태 · 습기 (비보호구역)',
+      '노면상태 · 서리/결빙 (비보호구역)',
+      '기상상태 · 맑음 (비보호구역)',
+      '기상상태 · 비 (비보호구역)',
+      '기상상태 · 흐림 (비보호구역)',
+      '도로형태 · 단일로 - 기타 (비보호구역)',
+      '도로형태 · 교차로 - 교차로횡단보도내 (비보호구역)',
+      '도로형태 · 교차로 - 교차로안 (비보호구역)',
+      '도로형태 · 교차로 - 교차로부근 (비보호구역)',
+      '도로형태 · 기타 - 기타 (비보호구역)',
+      '도로형태 · 단일로 - 횡단보도상 (비보호구역)',
+      '도로형태 · 단일로 - 횡단보도부근 (비보호구역)',
+      '도로형태 · 단일로 - 고가도로위 (비보호구역)',
+      '도로형태 · 주차장 - 주차장 (비보호구역)',
+      '도로형태 · 단일로 - 지하차도(도로)내 (비보호구역)',
+      '법규위반∧기상상태 ∧ 안전운전불이행 · 맑음 (비보호구역)',
+      '법규위반∧기상상태 ∧ 보행자보호의무위반 · 맑음 (비보호구역)',
+      '법규위반∧기상상태 ∧ 신호위반 · 맑음 (비보호구역)',
+      '법규위반∧기상상태 ∧ 기타 · 맑음 (비보호구역)',
+      '법규위반∧기상상태 ∧ 안전운전불이행 · 비 (비보호구역)',
+      '법규위반∧기상상태 ∧ 안전운전불이행 · 흐림 (비보호구역)',
+      '법규위반∧기상상태 ∧ 보행자보호의무위반 · 비 (비보호구역)',
+      '법규위반∧기상상태 ∧ 중앙선침범 · 맑음 (비보호구역)',
+      '법규위반∧기상상태 ∧ 안전거리미확보 · 맑음 (비보호구역)',
+      '법규위반∧기상상태 ∧ 신호위반 · 흐림 (비보호구역)',
+      '법규위반∧기상상태 ∧ 보행자보호의무위반 · 흐림 (비보호구역)',
+      '법규위반∧기상상태 ∧ 교차로운행방법위반 · 맑음 (비보호구역)',
+      '법규위반∧기상상태 ∧ 신호위반 · 비 (비보호구역)',
+      '법규위반∧기상상태 ∧ 기타 · 비 (비보호구역)',
+      '법규위반∧기상상태 ∧ 안전거리미확보 · 흐림 (비보호구역)',
+      '법규위반∧기상상태 ∧ 중앙선침범 · 비 (비보호구역)',
+      '학교·유치원(보조CSV 전체)'
+    ];
+
+    // 체크박스 UI 생성
+    function renderLayerCheckboxes() {
+      const box = document.getElementById('layer-checkbox-list');
+      box.innerHTML = layerItems.map((item, idx) => `
+        <label style="display:flex; align-items:center; gap:6px; font-size:1em; background:#fff; border-radius:8px; padding:6px 12px; box-shadow:0 1px 4px rgba(0,0,0,0.04);">
+          <input type="checkbox" class="layer-checkbox" data-layer="layer${idx}" checked>
+          <span>${item}</span>
+        </label>
+      `).join('');
+    }
+
+    // Folium 지도 iframe 내 레이어 제어 JS (postMessage 활용)
+    function setupLayerControl() {
+      const checkboxes = document.querySelectorAll('.layer-checkbox');
+      checkboxes.forEach(cb => {
+        cb.addEventListener('change', function() {
+          const layerId = this.getAttribute('data-layer');
+          const checked = this.checked;
+          // Folium 지도 iframe에 메시지 전달
+          const iframe = document.getElementById('daejeon-map');
+          iframe.contentWindow.postMessage({ type: 'layer-control', layerId, checked }, '*');
+        });
+      });
+    }
+
+    // DOMContentLoaded 시 체크박스 생성 및 이벤트 연결
+    document.addEventListener('DOMContentLoaded', function() {
+      renderLayerCheckboxes();
+      setTimeout(setupLayerControl, 500); // iframe 로딩 후 연결
+    });
+
+    // Folium 지도 iframe에서 메시지 수신 처리 예시 (지도 쪽 JS 필요)
+    // window.addEventListener('message', function(e) {
+    //   if (e.data.type === 'layer-control') {
+    //     // e.data.layerId, e.data.checked 값에 따라 지도 레이어 show/hide
+    //   }
+    // });
+
+    // 위험지역 TOP5 데이터 (샘플, 실제는 사고/제보 데이터에서 추출)
+    const top5Risk = [
+      { rank: 1, gu: '서구', dong: '둔산동', type: '교통 위험', count: 8 },
+      { rank: 2, gu: '유성구', dong: '봉명동', type: '시설 위험', count: 6 },
+      { rank: 3, gu: '대덕구', dong: '신탄진동', type: '교통 위험', count: 5 },
+      { rank: 4, gu: '서구', dong: '관저동', type: '시설 위험', count: 4 },
+      { rank: 5, gu: '중구', dong: '대사동', type: '기타', count: 3 }
+    ];
+
+    // 안전 통계 시각화 렌더링
+    function renderHospitalStats() {
+      const el = document.getElementById('hospital-stats');
+      el.innerHTML = `<h3>구별 병원/응급시설 현황</h3>` +
+        `<ul class='hospital-list'>` +
+        hospitalData.map(h => `<li><span class='emoji'>🏥</span> <span class='gu'>${h.gu}</span> <span class='count'>${h.count} 개</span></li>`).join('') + `</ul>` +
+        `<hr class='divider'>`;
+    }
+
+    function renderTop5Risk() {
+      const el = document.getElementById('top5-risk');
+      const typeEmoji = {
+        '교통 위험': '⚠️',
+        '시설 위험': '🏚️',
+        '기타': '📝'
+      };
+      el.innerHTML = `<h3>위험지역 TOP5</h3>` +
+        `<ol class='top5-risk-list'>` +
+        top5Risk.map((r, idx) => `<li style='display:flex; align-items:center; justify-content:center; gap:6px;'>
+          <span class='rank'>${idx + 1}.</span>
+          <span class='risk-emoji'>${typeEmoji[r.type] || '❗'}</span>
+          <span style='color:#34495e;'>${r.gu} ${r.dong}</span>
+          <span class='type'>${r.type}</span>
+          <span class='count'>${r.count}건</span>
+        </li>`).join('') + `</ol>`;
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+      renderHospitalStats();
+      renderTop5Risk();
+    });
+    const floatingReportBtn = document.getElementById('floatingReportBtn');
+    const reportModal = document.getElementById('reportModal');
+    const closeModal = document.getElementById('closeModal');
+    const reportForm = document.getElementById('reportForm');
+    const cancelBtn = document.getElementById('cancelBtn');
+    const imageDropZone = document.getElementById('imageDropZone');
+    const imageInput = document.getElementById('imageInput');
+    const previewImage = document.getElementById('previewImage');
+    const imageDropText = document.getElementById('imageDropText');
+
+    // 제보 폼 열기/닫기
+    floatingReportBtn.onclick = () => {
+      reportModal.style.display = 'flex';
+    };
+    closeModal.onclick = () => {
+      reportModal.style.display = 'none';
+    };
+    cancelBtn.onclick = () => {
+      reportModal.style.display = 'none';
+    };
+
+    // 사진 첨부 기능
+    imageDropZone.onclick = () => imageInput.click();
+    imageDropZone.ondragover = (e) => {
+      e.preventDefault();
+      imageDropZone.style.background = '#e0e7ff';
+    };
+    imageDropZone.ondragleave = (e) => {
+      e.preventDefault();
+      imageDropZone.style.background = '#fafafa';
+    };
+    imageDropZone.ondrop = (e) => {
+      e.preventDefault();
+      imageDropZone.style.background = '#fafafa';
+      if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+        imageInput.files = e.dataTransfer.files;
+        handleImageUpload(e.dataTransfer.files[0]);
+      }
+    };
+    imageInput.onchange = (e) => {
+      if (e.target.files && e.target.files[0]) {
+        handleImageUpload(e.target.files[0]);
+      }
+    };
+    function handleImageUpload(file) {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        previewImage.style.display = 'block';
+        previewImage.innerHTML = `<img src="${e.target.result}" style="max-width:100%; max-height:80px; border-radius:8px;">`;
+        imageDropText.style.display = 'none';
+      };
+      reader.readAsDataURL(file);
+    }
+
+    // 제보 폼 제출
+    reportForm.onsubmit = function(e) {
+      e.preventDefault();
+      const reportType = document.getElementById('reportType').value;
+      const district = document.getElementById('district').value;
+      const content = document.getElementById('content').value.trim();
+      let imageData = '';
+      if (imageInput.files && imageInput.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(ev) {
+          imageData = ev.target.result;
+          saveReport(reportType, district, content, imageData);
+        };
+        reader.readAsDataURL(imageInput.files[0]);
+      } else {
+        saveReport(reportType, district, content, '');
+      }
+    };
+
+    function saveReport(reportType, district, content, imageData) {
+      if (!content || !reportType) return;
+      const reports = JSON.parse(localStorage.getItem('reports') || '[]');
+      reports.push({ reportType, district, content, imageData, date: new Date().toLocaleString() });
+      localStorage.setItem('reports', JSON.stringify(reports));
+      reportModal.style.display = 'none';
+      reportForm.reset();
+      previewImage.style.display = 'none';
+      imageDropText.style.display = 'block';
+      imageInput.value = '';
+      alert('제보가 등록되었습니다!');
+    }
+
+  <script src="main.js"></script>
+</body>

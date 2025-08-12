@@ -1,0 +1,6 @@
+꿈돌이 png 이미지입니다. 웹에서 사용하려면 아래 경로로 저장해 주세요.
+
+파일명: dreamdori.png
+경로: c:\Users\82103\Desktop\daejeonproject\dreamdori.png
+
+(이미지 파일을 직접 복사해 주세요. index.html에서 src="./dreamdori.png"로 참조합니다.)
