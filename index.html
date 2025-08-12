@@ -1,3 +1,62 @@
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>대전 커뮤니티 헤더</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="replit-ui.css">
+  <style>
+    body {
+      background: #f7f8fa;
+      font-family: 'Noto Sans KR', sans-serif;
+      margin: 0;
+    }
+    .top-bar {
+      background: linear-gradient(90deg, #ffe066 60%, #d9f99d 100%);
+      padding: 32px 0 0 0;
+      border-bottom-left-radius: 32px;
+      border-bottom-right-radius: 32px;
+      position: relative;
+    }
+    .top-bar-inner {
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 0 48px;
+      gap: 32px;
+    }
+    .top-bar-inner img {
+      height: 56px;
+      margin-right: 18px;
+    }
+    .nav {
+      display: flex;
+      gap: 32px;
+      font-size: 20px;
+      align-items: center;
+    }
+    .nav a {
+      text-decoration: none;
+      color: #222;
+      padding: 8px 16px;
+      border-radius: 16px;
+      transition: background 0.2s;
+    }
+    .nav a.active, .nav a:hover {
+      background: #fff6db;
+      color: #222;
+      font-weight: bold;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    }
+  </style>
+</head>
+<body>
+  
+</html>
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -9,6 +68,8 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
   <style>
 body {
   background: #f5f6fa;
@@ -489,67 +550,10 @@ footer {
       </div>
       <!-- 오른쪽 레이어 제어 패널 -->
   <div class="layer-control-panel" style="flex:2; min-width:220px; max-width:350px; padding:32px 18px 32px 18px; background:#fffbe6; border-radius:24px; box-shadow:0 4px 24px rgba(0,0,0,0.10); border:2px solid #ffe066; margin:18px 0 18px 0; display:flex; flex-direction:column; gap:10px; align-items:stretch;">
-        <!-- 분석 유형 -->
-  <div class="layer-category-box" style="padding:18px 16px; border:1.5px solid #ffe066; border-radius:16px; margin-bottom:8px; background:#fff;">
-          <h3 style="margin-top:0; margin-bottom:12px; color:#f7b731; font-size:1.08em;">분석 유형</h3>
-          <label><input type="checkbox" class="layer-checkbox" data-layer="layer0" checked> 사고·전체 (비보호구역)</label><br>
-          <label><input type="checkbox" class="layer-checkbox" data-layer="layer1" checked> 클러스터(위험도, 비보호구역)</label>
-        </div>
-        <!-- 법규 위반 -->
-        <div class="layer-category-box" style="padding:18px 16px; border:1.5px solid #ffe066; border-radius:16px; margin-bottom:18px; background:#fff;">
-          <h3 style="margin-top:0; margin-bottom:12px; color:#f7b731; font-size:1.08em;">법규 위반</h3>
-          <label><input type="checkbox" class="layer-checkbox" data-layer="layer2" checked> 법규위반·안전운전불이행 (비보호구역)</label><br>
-          <label><input type="checkbox" class="layer-checkbox" data-layer="layer3" checked> 법규위반·보행자보호의무위반 (비보호구역)</label><br>
-          <label><input type="checkbox" class="layer-checkbox" data-layer="layer4" checked> 법규위반·신호위반 (비보호구역)</label><br>
-          <label><input type="checkbox" class="layer-checkbox" data-layer="layer5" checked> 법규위반·기타 (비보호구역)</label><br>
-          <label><input type="checkbox" class="layer-checkbox" data-layer="layer6" checked> 법규위반·중앙선침범 (비보호구역)</label><br>
-          <label><input type="checkbox" class="layer-checkbox" data-layer="layer7" checked> 법규위반·안전거리미확보 (비보호구역)</label><br>
-          <label><input type="checkbox" class="layer-checkbox" data-layer="layer8" checked> 법규위반·교차로운행방법위반 (비보호구역)</label>
-        </div>
-        <!-- 도로 환경 -->
-        <div class="layer-category-box" style="padding:18px 16px; border:1.5px solid #ffe066; border-radius:16px; margin-bottom:18px; background:#fff;">
-          <h3 style="margin-top:0; margin-bottom:12px; color:#f7b731; font-size:1.08em;">도로 환경</h3>
-          <label><input type="checkbox" class="layer-checkbox" data-layer="layer9" checked> 노면상태·건조 (비보호구역)</label><br>
-          <label><input type="checkbox" class="layer-checkbox" data-layer="layer10" checked> 노면상태·젖음/습기 (비보호구역)</label><br>
-          <label><input type="checkbox" class="layer-checkbox" data-layer="layer11" checked> 노면상태·서리/결빙 (비보호구역)</label><br>
-          <label><input type="checkbox" class="layer-checkbox" data-layer="layer12" checked> 기상상태·맑음 (비보호구역)</label><br>
-          <label><input type="checkbox" class="layer-checkbox" data-layer="layer13" checked> 기상상태·비 (비보호구역)</label><br>
-          <label><input type="checkbox" class="layer-checkbox" data-layer="layer14" checked> 기상상태·흐림 (비보호구역)</label>
-        </div>
-        <!-- 도로 형태 -->
-        <div class="layer-category-box" style="padding:18px 16px; border:1.5px solid #ffe066; border-radius:16px; margin-bottom:18px; background:#fff;">
-          <h3 style="margin-top:0; margin-bottom:12px; color:#f7b731; font-size:1.08em;">도로 형태</h3>
-          <label><input type="checkbox" class="layer-checkbox" data-layer="layer15" checked> 도로형태·단일로 - 기타 (비보호구역)</label><br>
-          <label><input type="checkbox" class="layer-checkbox" data-layer="layer16" checked> 도로형태·교차로 - 교차로횡단보도내 (비보호구역)</label><br>
-          <label><input type="checkbox" class="layer-checkbox" data-layer="layer17" checked> 도로형태·교차로 - 교차로안 (비보호구역)</label><br>
-          <label><input type="checkbox" class="layer-checkbox" data-layer="layer18" checked> 도로형태·교차로 - 교차로부근 (비보호구역)</label><br>
-          <label><input type="checkbox" class="layer-checkbox" data-layer="layer19" checked> 도로형태·기타 - 기타 (비보호구역)</label><br>
-          <label><input type="checkbox" class="layer-checkbox" data-layer="layer20" checked> 도로형태·단일로 - 횡단보도상 (비보호구역)</label><br>
-          <label><input type="checkbox" class="layer-checkbox" data-layer="layer21" checked> 도로형태·단일로 - 횡단보도부근 (비보호구역)</label><br>
-          <label><input type="checkbox" class="layer-checkbox" data-layer="layer22" checked> 도로형태·단일로 - 고가도로위 (비보호구역)</label><br>
-          <label><input type="checkbox" class="layer-checkbox" data-layer="layer23" checked> 도로형태·주차장 - 주차장 (비보호구역)</label><br>
-          <label><input type="checkbox" class="layer-checkbox" data-layer="layer24" checked> 도로형태·단일로 - 지하차도(도로)내 (비보호구역)</label>
-        </div>
-        <!-- 복합 조건 (위반+환경) -->
-        <div class="layer-category-box" style="padding:18px 16px; border:1.5px solid #ffe066; border-radius:16px; margin-bottom:18px; background:#fff;">
-          <h3 style="margin-top:0; margin-bottom:12px; color:#f7b731; font-size:1.08em;">복합 조건 (위반+환경)</h3>
-          <label><input type="checkbox" class="layer-checkbox" data-layer="layer25" checked> 법규위반∧기상상태 ∧ 안전운전불이행 · 맑음 (비보호구역)</label><br>
-          <label><input type="checkbox" class="layer-checkbox" data-layer="layer26" checked> 법규위반∧기상상태 ∧ 보행자보호의무위반 · 맑음 (비보호구역)</label><br>
-          <label><input type="checkbox" class="layer-checkbox" data-layer="layer27" checked> 법규위반∧기상상태 ∧ 신호위반 · 맑음 (비보호구역)</label><br>
-          <label><input type="checkbox" class="layer-checkbox" data-layer="layer28" checked> 법규위반∧기상상태 ∧ 기타 · 맑음 (비보호구역)</label><br>
-          <label><input type="checkbox" class="layer-checkbox" data-layer="layer29" checked> 법규위반∧기상상태 ∧ 안전운전불이행 · 비 (비보호구역)</label><br>
-          <label><input type="checkbox" class="layer-checkbox" data-layer="layer30" checked> 법규위반∧기상상태 ∧ 안전운전불이행 · 흐림 (비보호구역)</label><br>
-          <label><input type="checkbox" class="layer-checkbox" data-layer="layer31" checked> 법규위반∧기상상태 ∧ 보행자보호의무위반 · 비 (비보호구역)</label><br>
-          <label><input type="checkbox" class="layer-checkbox" data-layer="layer32" checked> 법규위반∧기상상태 ∧ 중앙선침범 · 맑음 (비보호구역)</label><br>
-          <label><input type="checkbox" class="layer-checkbox" data-layer="layer33" checked> 법규위반∧기상상태 ∧ 안전거리미확보 · 맑음 (비보호구역)</label><br>
-          <label><input type="checkbox" class="layer-checkbox" data-layer="layer34" checked> 법규위반∧기상상태 ∧ 신호위반 · 흐림 (비보호구역)</label><br>
-          <label><input type="checkbox" class="layer-checkbox" data-layer="layer35" checked> 법규위반∧기상상태 ∧ 보행자보호의무위반 · 흐림 (비보호구역)</label><br>
-          <label><input type="checkbox" class="layer-checkbox" data-layer="layer36" checked> 법규위반∧기상상태 ∧ 교차로운행방법위반 · 맑음 (비보호구역)</label><br>
-          <label><input type="checkbox" class="layer-checkbox" data-layer="layer37" checked> 법규위반∧기상상태 ∧ 신호위반 · 비 (비보호구역)</label><br>
-          <label><input type="checkbox" class="layer-checkbox" data-layer="layer38" checked> 법규위반∧기상상태 ∧ 기타 · 비 (비보호구역)</label><br>
-          <label><input type="checkbox" class="layer-checkbox" data-layer="layer39" checked> 법규위반∧기상상태 ∧ 안전거리미확보 · 흐림 (비보호구역)</label><br>
-          <label><input type="checkbox" class="layer-checkbox" data-layer="layer40" checked> 법규위반∧기상상태 ∧ 중앙선침범 · 비 (비보호구역)</label>
-        </div>
+  <!-- 카테고리별 체크박스 리스트 -->
+  <div id="layer-checkbox-list">
+    <!-- JS에서 동적으로 생성됨 -->
+  </div>
       </div>
     </div>
   </section>
@@ -689,6 +693,27 @@ footer {
     document.addEventListener('DOMContentLoaded', function() {
       renderHospitalStats();
       renderTop5Risk();
+      // 실시간 대전시 뉴스 RMS(WebSocket) 3개 표시
+      const newsList = document.getElementById('mini-news-list');
+      let newsItems = [];
+      // 실제 RMS 서버 주소로 변경 필요
+      const socket = new WebSocket('wss://rms-server.example.com/news?region=daejeon');
+      socket.onmessage = function(event) {
+        try {
+          const news = JSON.parse(event.data); // { title, url, time }
+          newsItems.unshift(news);
+          if (newsItems.length > 3) newsItems = newsItems.slice(0, 3);
+          renderNews();
+        } catch(e) {}
+      };
+      function renderNews() {
+        newsList.innerHTML = newsItems.map(n =>
+          `<div style="margin-bottom:8px;">
+            <a href="${n.url}" target="_blank" style="color:#222; font-weight:600;">${n.title}</a>
+            <span style="color:#888; font-size:0.92em;">${n.time}</span>
+          </div>`
+        ).join('');
+      }
     });
     const floatingReportBtn = document.getElementById('floatingReportBtn');
     const reportModal = document.getElementById('reportModal');
@@ -774,7 +799,7 @@ footer {
       imageDropText.style.display = 'block';
       imageInput.value = '';
       alert('제보가 등록되었습니다!');
-    }
-
-  <script src="main.js"></script>
-</body>
+      }
+    </script>
+    <script src="main.js"></script>
+  </body>

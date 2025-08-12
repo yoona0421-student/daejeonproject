@@ -20,132 +20,168 @@ async function fetchPosts() {
 // document.getElementById('post-form')가 없으면 아래 코드 실행 안함
 // if (document.getElementById('post-form')) {
 //   document.getElementById('post-form').addEventListener('submit', async function(e) {
-//     e.preventDefault();
-//     const title = document.getElementById('post-title').value.trim();
-//     const content = document.getElementById('post-content').value.trim();
-//     if (!title || !content) return;
-//     await fetch('http://localhost:4000/api/posts', {
-//       method: 'POST',
-//       headers: { 'Content-Type': 'application/json' },
-//       body: JSON.stringify({ title, content })
-//     });
-//     document.getElementById('post-title').value = '';
-//     document.getElementById('post-content').value = '';
-//     fetchPosts();
-//   });
-// }
 
-// 지도 및 클러스터 다각형 시각화
-window.addEventListener('DOMContentLoaded', () => {
-  // 안전 제보하기 버튼 클릭 시 모달 열기
-  const reportBtn = document.getElementById('floatingReportBtn');
-  const reportModal = document.getElementById('reportModal');
-  const closeModal = document.getElementById('closeModal');
-  if (reportBtn && reportModal) {
-    reportBtn.onclick = () => {
-      reportModal.style.display = 'flex';
-    };
+// 카테고리별 레이어 항목 분류
+const layerCategories = [
+  {
+    name: '사고 점',
+    items: [
+      '사고 점(전체: 비보호구역)',
+      '클러스터(위험도, 비보호구역)'
+    ]
+  },
+  {
+    name: '법규위반',
+    items: [
+      '법규위반 · 안전운전불이행 (비보호구역)',
+      '법규위반 · 보행자보호의무위반 (비보호구역)',
+      '법규위반 · 신호위반 (비보호구역)',
+      '법규위반 · 기타 (비보호구역)',
+      '법규위반 · 중앙선침범 (비보호구역)',
+      '법규위반 · 안전거리미확보 (비보호구역)',
+      '법규위반 · 교차로운행방법위반 (비보호구역)'
+    ]
+  },
+  {
+    name: '노면상태',
+    items: [
+      '노면상태 · 건조 (비보호구역)',
+      '노면상태 · 젖음/습기 (비보호구역)',
+      '노면상태 · 습기 (비보호구역)',
+      '노면상태 · 서리/결빙 (비보호구역)'
+    ]
+  },
+  {
+    name: '기상상태',
+    items: [
+      '기상상태 · 맑음 (비보호구역)',
+      '기상상태 · 비 (비보호구역)',
+      '기상상태 · 흐림 (비보호구역)'
+    ]
+  },
+  {
+    name: '도로형태',
+    items: [
+      '도로형태 · 단일로 - 기타 (비보호구역)',
+      '도로형태 · 교차로 - 교차로횡단보도내 (비보호구역)',
+      '도로형태 · 교차로 - 교차로안 (비보호구역)',
+      '도로형태 · 교차로 - 교차로부근 (비보호구역)',
+      '도로형태 · 기타 - 기타 (비보호구역)',
+      '도로형태 · 단일로 - 횡단보도상 (비보호구역)',
+      '도로형태 · 단일로 - 횡단보도부근 (비보호구역)',
+      '도로형태 · 단일로 - 고가도로위 (비보호구역)',
+      '도로형태 · 주차장 - 주차장 (비보호구역)',
+      '도로형태 · 단일로 - 지하차도(도로)내 (비보호구역)'
+    ]
+  },
+  {
+    name: '법규위반∧기상상태',
+    items: [
+      '법규위반∧기상상태 ∧ 안전운전불이행 · 맑음 (비보호구역)',
+      '법규위반∧기상상태 ∧ 보행자보호의무위반 · 맑음 (비보호구역)',
+      '법규위반∧기상상태 ∧ 신호위반 · 맑음 (비보호구역)',
+      '법규위반∧기상상태 ∧ 기타 · 맑음 (비보호구역)',
+      '법규위반∧기상상태 ∧ 안전운전불이행 · 비 (비보호구역)',
+      '법규위반∧기상상태 ∧ 안전운전불이행 · 흐림 (비보호구역)',
+      '법규위반∧기상상태 ∧ 보행자보호의무위반 · 비 (비보호구역)',
+      '법규위반∧기상상태 ∧ 중앙선침범 · 맑음 (비보호구역)',
+      '법규위반∧기상상태 ∧ 안전거리미확보 · 맑음 (비보호구역)',
+      '법규위반∧기상상태 ∧ 신호위반 · 흐림 (비보호구역)',
+      '법규위반∧기상상태 ∧ 보행자보호의무위반 · 흐림 (비보호구역)',
+      '법규위반∧기상상태 ∧ 교차로운행방법위반 · 맑음 (비보호구역)',
+      '법규위반∧기상상태 ∧ 신호위반 · 비 (비보호구역)',
+      '법규위반∧기상상태 ∧ 기타 · 비 (비보호구역)',
+      '법규위반∧기상상태 ∧ 안전거리미확보 · 흐림 (비보호구역)',
+      '법규위반∧기상상태 ∧ 중앙선침범 · 비 (비보호구역)'
+    ]
+  },
+  {
+    name: '기타',
+    items: [
+      '학교·유치원(보조CSV 전체)'
+    ]
   }
-  if (closeModal && reportModal) {
-    closeModal.onclick = () => {
-      reportModal.style.display = 'none';
-    };
-  }
-  // fetchPosts(); // 서버가 없을 때 호출하지 않음
-    // 제보 폼 제출 이벤트
-    const reportForm = document.getElementById('reportForm');
-    const imageInput = document.getElementById('imageInput');
-    const previewImage = document.getElementById('previewImage');
-    const imageDropText = document.getElementById('imageDropText');
-    if (reportForm) {
-      reportForm.onsubmit = async function(e) {
-        e.preventDefault();
-        const reportType = document.getElementById('reportType').value;
-        const district = document.getElementById('district').value;
-        const content = document.getElementById('content').value.trim();
-        let imageData = '';
-        if (imageInput.files && imageInput.files[0]) {
-          const reader = new FileReader();
-          reader.onload = async function(ev) {
-            imageData = ev.target.result;
-            await submitReport(reportType, district, content, imageData);
-          };
-          reader.readAsDataURL(imageInput.files[0]);
-        } else {
-          await submitReport(reportType, district, content, '');
-        }
-      };
-    }
+];
 
-    async function submitReport(reportType, district, content, imageData) {
-      if (!reportType || !district || !content) return;
-      await fetch('/api/report', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ reportType, district, content, imageData })
-      });
-      alert('제보가 등록되었습니다!');
-      document.getElementById('reportModal').style.display = 'none';
-      reportForm.reset();
-      if (previewImage) previewImage.style.display = 'none';
-      if (imageDropText) imageDropText.style.display = 'block';
-      if (imageInput) imageInput.value = '';
-    }
-
-
-  // Leaflet 지도 초기화 (대전 중심)
-  const map = L.map('daejeon-map', {
-    center: [36.3504, 127.3845],
-    zoom: 12,
-    zoomControl: false,
-    attributionControl: false
+// 카테고리별 체크박스 UI 생성
+function renderLayerCheckboxes() {
+  const box = document.getElementById('layer-checkbox-list');
+  let html = '';
+  let layerIdx = 0;
+  layerCategories.forEach((cat, catIdx) => {
+    html += `<div class="layer-category">
+      <div class="category-header" style="display:flex; align-items:center; justify-content:space-between; font-weight:600; font-size:1.08em; margin-bottom:6px;">
+        <span>${cat.name}</span>
+        <button class="toggle-btn" data-cat="${catIdx}" style="background:#ffe066; border:none; border-radius:8px; padding:2px 12px; font-size:0.98em; cursor:pointer;">더보기</button>
+      </div>
+      <div class="category-items" data-cat="${catIdx}" style="display:none; flex-direction:column; gap:6px;">
+        ${cat.items.map(item => `
+          <label style="display:flex; align-items:center; gap:6px; font-size:1em; background:#fff; border-radius:8px; padding:6px 12px; box-shadow:0 1px 4px rgba(0,0,0,0.04);">
+            <input type="checkbox" class="layer-checkbox" data-layer="layer${layerIdx++}" checked>
+            <span>${item}</span>
+          </label>
+        `).join('')}
+      </div>
+    </div>`;
   });
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    opacity: 0.7
-  }).addTo(map);
+  box.innerHTML = html;
+}
 
-  // 예시 데이터 (유치원/초등학교 위치 일부)
-  const data = [
-    { lat: 36.33811819, lon: 127.4053579 },
-    { lat: 36.3274262, lon: 127.3980716 },
-    { lat: 36.32086237, lon: 127.4494617 },
-    { lat: 36.30905624, lon: 127.3918438 },
-    { lat: 36.33360802, lon: 127.4529798 },
-    { lat: 36.34219789, lon: 127.4406848 },
-    { lat: 36.31837988, lon: 127.4101734 },
-    { lat: 36.35054047, lon: 127.4214299 },
-    { lat: 36.3347811, lon: 127.4082151 },
-    { lat: 36.44563785, lon: 127.4123228 }
-    // ... 더 많은 데이터로 확장 가능
-  ];
-
-  // 클러스터 그룹 생성
-  const markers = L.markerClusterGroup();
-
-  // 마커 추가
-  data.forEach(d => {
-    const marker = L.marker([d.lat, d.lon]);
-    markers.addLayer(marker);
+// 더보기 버튼 토글 기능
+function setupCategoryToggle() {
+  document.querySelectorAll('.toggle-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      const catIdx = this.getAttribute('data-cat');
+      const items = document.querySelector(`.category-items[data-cat="${catIdx}"]`);
+      if (items.style.display === 'none') {
+        items.style.display = 'flex';
+        this.textContent = '닫기';
+      } else {
+        items.style.display = 'none';
+        this.textContent = '더보기';
+      }
+    });
   });
+}
 
-  // 클러스터 Convex Hull 폴리곤 표시
-  markers.on('clustermouseover', function (a) {
-    if (window.hullPolygon) map.removeLayer(window.hullPolygon);
-    const hullLatLngs = a.layer.getConvexHull().map(p => p.latlng);
-    window.hullPolygon = L.polygon(hullLatLngs, {
-      color: '#b6e388',
-      fillColor: '#ffe066',
-      fillOpacity: 0.3,
-      weight: 2,
-      dashArray: '6,4'
-    }).addTo(map);
+// Folium 지도 iframe 내 레이어 제어 JS (postMessage 활용)
+function setupLayerControl() {
+  const checkboxes = document.querySelectorAll('.layer-checkbox');
+  checkboxes.forEach(cb => {
+    cb.addEventListener('change', function() {
+      const layerId = this.getAttribute('data-layer');
+      const checked = this.checked;
+      // Folium 지도 iframe에 메시지 전달
+      const iframe = document.getElementById('daejeon-map');
+      iframe.contentWindow.postMessage({ type: 'layer-control', layerId, checked }, '*');
+    });
   });
-  markers.on('clustermouseout', function () {
-    if (window.hullPolygon) map.removeLayer(window.hullPolygon);
-  });
+}
 
-  map.addLayer(markers);
+// DOMContentLoaded 시 체크박스 생성 및 이벤트 연결
+
+document.addEventListener('DOMContentLoaded', function() {
+  renderLayerCheckboxes();
+  setupCategoryToggle();
+  setTimeout(setupLayerControl, 500); // iframe 로딩 후 연결
 });
+
+// 지도 초기화 예시 (만약 직접 JS에서 Leaflet 지도를 생성한다면 아래처럼 별도 함수로 분리)
+// function initMap() {
+//   const map = L.map('daejeon-map', {
+//     center: [36.3504119, 127.3845475],
+//     zoom: 12,
+//     zoomControl: false,
+//     attributionControl: false
+//   });
+//   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+//     opacity: 0.7
+//   }).addTo(map);
+//
+//   // 예시 데이터 (유치원/초등학교 위치 일부)
+//   const data = [ ... ];
+//   // 클러스터 그룹 생성 및 마커 추가 등...
+// }
 
   // 실시간 뉴스 알림 (네이버 RSS)
   async function fetchNews() {
@@ -154,50 +190,57 @@ window.addEventListener('DOMContentLoaded', () => {
     const proxyUrl = 'https://api.allorigins.win/get?url=' + encodeURIComponent(rssUrl);
     try {
       const res = await fetch(proxyUrl);
-    posts.forEach(post => {
-      const postDiv = document.createElement('div');
-      postDiv.className = 'post';
-      postDiv.innerHTML = `
-        ${post.imageData ? `<img src="${post.imageData}" alt="첨부 이미지">` : ''}
-        <div class="meta">
-          <span class="type">${post.reportType || ''}</span>
-          <span class="district">${post.district}</span>
-          <span class="date">${post.date ? post.date : ''}</span>
-        </div>
-        <div class="content">${post.content}</div>
-        <div>좋아요: <span class="like-count">${post.likes}</span> <button class="like-btn">👍</button></div>
-        <div>
-          <b>댓글</b>
-          <ul class="comments">
-            ${post.comments.map(c => `<li>${c}</li>`).join('')}
-          </ul>
-          <input type="text" class="comment-input" placeholder="댓글 작성">
-          <button class="comment-btn">댓글 등록</button>
-        </div>
-      `;
-      // 좋아요 버튼
-      postDiv.querySelector('.like-btn').onclick = async () => {
-        await fetch(`/api/posts/${post.id}/like`, { method: 'POST' });
-        loadPosts(districtSelect.value);
-      };
-      // 댓글 등록
-      postDiv.querySelector('.comment-btn').onclick = async () => {
-        const input = postDiv.querySelector('.comment-input');
-        const comment = input.value.trim();
-        if (comment) {
-          await fetch(`/api/posts/${post.id}/comment`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ comment })
-          });
-          input.value = '';
-          loadPosts(districtSelect.value);
-        }
-      };
-      postsContainer.appendChild(postDiv);
-    });
+      // ...뉴스 데이터 처리 코드...
+    } catch (err) {
+      console.error('뉴스 데이터 fetch 중 오류:', err);
     }
   }
+
+// 게시글 렌더링 함수 예시 (템플릿 리터럴 오류 수정)
+function renderPosts(posts, districtSelect, postsContainer) {
+  posts.forEach(post => {
+    const postDiv = document.createElement('div');
+    postDiv.className = 'post';
+    postDiv.innerHTML = `
+      ${post.imageData ? `<img src="${post.imageData}" alt="첨부 이미지">` : ''}
+      <div class="meta">
+        <span class="type">${post.reportType || ''}</span>
+        <span class="district">${post.district}</span>
+        <span class="date">${post.date ? post.date : ''}</span>
+      </div>
+      <div class="content">${post.content}</div>
+      <div>좋아요: <span class="like-count">${post.likes}</span> <button class="like-btn">👍</button></div>
+      <div>
+        <b>댓글</b>
+        <ul class="comments">
+          ${post.comments.map(c => `<li>${c}</li>`).join('')}
+        </ul>
+        <input type="text" class="comment-input" placeholder="댓글 작성" />
+        <button class="comment-btn">댓글 등록</button>
+      </div>
+    `;
+    // 좋아요 버튼
+    postDiv.querySelector('.like-btn').onclick = async () => {
+      await fetch(`/api/posts/${post.id}/like`, { method: 'POST' });
+      loadPosts(districtSelect.value);
+    };
+    // 댓글 등록
+    postDiv.querySelector('.comment-btn').onclick = async () => {
+      const input = postDiv.querySelector('.comment-input');
+      const comment = input.value.trim();
+      if (comment) {
+        await fetch(`/api/posts/${post.id}/comment`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ comment })
+        });
+        input.value = '';
+        loadPosts(districtSelect.value);
+      }
+    };
+    postsContainer.appendChild(postDiv);
+  });
+}
 
   function renderMiniNews(newsList) {
     const container = document.getElementById('mini-news-list');
@@ -355,16 +398,18 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // 제보 저장 함수
   function saveReport(reportType, district, content, imageData) {
-    if (!content || !reportType || !district) return;
-    var reports = JSON.parse(localStorage.getItem('reports') || '[]');
-    reports.push({ reportType: reportType, district: district, content: content, imageData: imageData, date: new Date().toLocaleString() });
-    localStorage.setItem('reports', JSON.stringify(reports));
-    reportModal.style.display = 'none';
-    reportForm.reset();
-    previewImage.style.display = 'none';
-    imageDropText.style.display = 'block';
-    imageInput.value = '';
-    alert('제보가 등록되었습니다!');
+  if (!content || !reportType || !district) return;
+  var reports = JSON.parse(localStorage.getItem('reports') || '[]');
+  // 고유 id 생성 (timestamp + 랜덤)
+  var uniqueId = Date.now().toString() + Math.random().toString(36).substr(2, 9);
+  reports.push({ id: uniqueId, reportType: reportType, district: district, content: content, imageData: imageData, date: new Date().toLocaleString() });
+  localStorage.setItem('reports', JSON.stringify(reports));
+  reportModal.style.display = 'none';
+  reportForm.reset();
+  previewImage.style.display = 'none';
+  imageDropText.style.display = 'block';
+  imageInput.value = '';
+  alert('제보가 등록되었습니다!');
   }
 });
 

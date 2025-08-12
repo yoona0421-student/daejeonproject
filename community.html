@@ -1,66 +1,449 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <title>커뮤니티 게시판</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>대전 커뮤니티</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="replit-ui.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+  <style>
+    body {
+      background: #f7f8fa;
+      font-family: 'Noto Sans KR', sans-serif;
+      margin: 0;
+    }
+    .main-header {
+      background: #fff;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+      padding: 28px 48px 18px 48px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+    }
+    .header-title-group h1 {
+      font-size: 2.1em;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .header-title-group .subtitle {
+      font-size: 1.08em;
+      color: #888;
+      margin-left: 2px;
+    }
+    .nav-bar {
+      background: #fff;
+      display: flex;
+      align-items: center;
+      gap: 32px;
+      padding: 0 48px;
+      height: 54px;
+      border-bottom: 1.5px solid #eee;
+      font-size: 1.08em;
+      font-weight: 500;
+    }
+    .nav-bar .nav-item {
+      color: #34495e;
+      cursor: pointer;
+      padding: 0 12px;
+      border-radius: 8px;
+      transition: background 0.15s;
+    }
+    .nav-bar .nav-item:hover {
+      background: #ffe06633;
+    }
+    .main-layout {
+      display: flex;
+      gap: 32px;
+      padding: 32px 48px 0 48px;
+      min-height: 80vh;
+    }
+    .sidebar {
+      width: 340px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+    .map-col {
+      flex: 4;
+      min-width: 240px;
+      max-width: 840px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+    }
+    .layer-control-panel {
+      flex: 2;
+      min-width: 220px;
+      max-width: 350px;
+      padding: 32px 18px 32px 18px;
+      background: #fffbe6;
+      border-radius: 24px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.10);
+      border: 2px solid #ffe066;
+      margin: 18px 0 18px 0;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      align-items: stretch;
+    }
+  </style>
 </head>
 <body>
-    <h1>커뮤니티 게시판</h1>
-    <label>구 선택:
-        <select id="districtSelect">
-            <option value="동구">동구</option>
-            <option value="중구">중구</option>
-            <option value="서구">서구</option>
-            <option value="유성구">유성구</option>
-            <option value="대덕구">대덕구</option>
+  <!-- 안전 제보하기 모달 -->
+  <div id="reportModal" style="display:none; position:fixed; left:0; top:0; width:100vw; height:100vh; background:rgba(0,0,0,0.18); z-index:2000; align-items:center; justify-content:center;">
+    <div style="background:#fff; border-radius:18px; box-shadow:0 8px 32px rgba(0,0,0,0.10); padding:38px 32px 32px 32px; min-width:340px; max-width:98vw; position:relative;">
+      <button id="closeModal" style="position:absolute; top:18px; right:18px; background:none; border:none; font-size:1.6em; color:#888; cursor:pointer;">&times;</button>
+      <h2 style="margin-top:0; margin-bottom:18px; font-size:1.6em; font-weight:700; color:#222; display:flex; align-items:center; gap:8px;">
+        <img src="dream_family_01.png" alt="번개" style="height:56px; width:auto; vertical-align:middle;"> 안전 제보하기
+      </h2>
+      <form id="reportForm">
+        <label for="reportType" style="font-weight:600; color:#444;">제보 유형</label><br>
+        <select id="reportType" required style="width:100%; margin-bottom:18px; padding:8px; border-radius:8px; border:1.5px solid #ffe066;">
+          <option value="">제보 유형을 선택하세요</option>
+          <option value="교통 위험">교통 위험</option>
+          <option value="시설 위험">시설 위험</option>
+          <option value="기타">기타</option>
         </select>
-    </label>
-    <div id="postsContainer"></div>
-        <style>
-        .post {
-            background: #fffbe6;
-            border-radius: 14px;
-            box-shadow: 0 2px 8px rgba(168,224,99,0.10);
-            border: 1.5px solid #ffe066;
-            padding: 18px 16px;
-            margin-bottom: 18px;
-            min-width: 220px;
-            max-width: 600px;
-            font-size: 1em;
-            position: relative;
+        <label for="district" style="font-weight:600; color:#444;">대전광역시 구</label><br>
+        <select id="district" required style="width:100%; margin-bottom:18px; padding:8px; border-radius:8px; border:1.5px solid #ffe066;">
+          <option value="">구를 선택하세요</option>
+          <option value="동구">동구</option>
+          <option value="중구">중구</option>
+          <option value="서구">서구</option>
+          <option value="유성구">유성구</option>
+          <option value="대덕구">대덕구</option>
+        </select>
+        <label for="content" style="font-weight:600; color:#444;">내용</label><br>
+        <textarea id="content" rows="4" required style="width:100%; margin-bottom:18px; padding:8px; border-radius:8px; border:1.5px solid #ffe066;"></textarea>
+        <label style="font-weight:600; color:#444;">사진 첨부 (선택)</label><br>
+        <div id="imageDropZone" style="border:2px dashed #ffe066; background:#fffbe6; color:#b2b200; font-size:1em; border-radius:10px; padding:18px; text-align:center; margin-bottom:18px; cursor:pointer;">
+          <span id="imageDropText">사진을 드래그하거나 클릭하여 업로드</span>
+          <input type="file" id="imageInput" accept="image/*" style="display:none;">
+          <div id="previewImage" style="display:none; margin-top:8px;"></div>
+        </div>
+        <div style="display:flex; gap:12px; justify-content:flex-end; margin-top:18px;">
+          <button type="button" id="cancelBtn" style="background:#eee; color:#444; border:none; border-radius:8px; padding:8px 22px; font-size:1em; cursor:pointer;">취소</button>
+          <button type="submit" style="background:#6fcf97; color:#fff; border:none; border-radius:8px; padding:8px 22px; font-size:1em; font-weight:600; cursor:pointer;">제보하기</button>
+        </div>
+      </form>
+    </div>
+  </div>
+  <!-- 오른쪽 상단 고정 안전제보하기 버튼 -->
+  <button id="floatingReportBtn" style="position:fixed; right:32px; top:80px; z-index:1200; background:#6fcf97; color:#fff; border:2px solid #27ae60; padding:16px 28px; border-radius:50px; font-size:18px; font-family:'Gowun Dodum','Pretendard','Noto Sans KR',sans-serif; box-shadow:0 4px 16px rgba(0,0,0,0.12); cursor:pointer;">안전 제보하기</button>
+  <nav class="nav-bar">
+  <a href="index.html"><img src="daejeon_logo.png" alt="대전 로고" style="height:200px; margin-right:18px; width:auto;"></a>
+      <span class="nav-item">정보공개</span>
+      <span class="nav-item">참여마당</span>
+      <span class="nav-item">전자민원</span>
+      <span class="nav-item">행정정보</span>
+      <span class="nav-item">생활정보</span>
+      <span class="nav-item">대전소개</span>
+      <span class="nav-item">분야별정보</span>
+      <a class="nav-item" href="community.html" style="background:#fff8dc; padding:6px 18px; border-radius:12px; font-weight:600; color:#222; text-decoration:none;">커뮤니티</a>
+  </nav>
+  <header class="main-header">
+    <div class="header-left">
+      <img src="꿈돌이.png" alt="꿈돌이" class="dreamdori-animate" style="height:50px; margin-right:10px; width:auto; aspect-ratio:1/1;">
+      <div class="header-title-group">
+        <h1>대안책(대전 안전 Check) - 어린이 보호 사각지대 밀도기반 군집분석 웹 서비스</h1>
+        <div class="subtitle">꿈돌이와 함께하는 안전한 통학로</div>
+      </div>
+    </div>
+    <!-- 헤더에서 안전제보하기 버튼 제거 -->
+  </header>
+  <div class="main-layout">
+    <aside class="sidebar">
+      <!-- 사이드바 내용 필요시 추가 -->
+    </aside>
+    <div class="map-col">
+      <section class="community-board" style="width:100%; max-width:900px; margin:0 auto;">
+        <h2 style="font-size:1.5em; font-weight:700; color:#27ae60; margin-bottom:18px; display:flex; align-items:center; gap:10px;">
+          <img src="꿈돌이.png" alt="꿈돌이" style="height:38px; vertical-align:middle;"> 대전 안전 제보 커뮤니티
+        </h2>
+        <div id="community-cards"></div>
+      </section>
+      <script>
+      // 안전제보하기 버튼 및 모달 동작 구현
+      document.addEventListener('DOMContentLoaded', function() {
+        const floatingReportBtn = document.getElementById('floatingReportBtn');
+        const reportModal = document.getElementById('reportModal');
+        const closeModal = document.getElementById('closeModal');
+        const reportForm = document.getElementById('reportForm');
+        const cancelBtn = document.getElementById('cancelBtn');
+        const imageDropZone = document.getElementById('imageDropZone');
+        const imageInput = document.getElementById('imageInput');
+        const previewImage = document.getElementById('previewImage');
+        const imageDropText = document.getElementById('imageDropText');
+
+        floatingReportBtn.onclick = () => {
+          reportModal.style.display = 'flex';
+        };
+        closeModal.onclick = () => {
+          reportModal.style.display = 'none';
+        };
+        cancelBtn.onclick = () => {
+          reportModal.style.display = 'none';
+        };
+
+        imageDropZone.onclick = () => imageInput.click();
+        imageDropZone.ondragover = (e) => {
+          e.preventDefault();
+          imageDropZone.style.background = '#e0e7ff';
+        };
+        imageDropZone.ondragleave = (e) => {
+          e.preventDefault();
+          imageDropZone.style.background = '#fafafa';
+        };
+        imageDropZone.ondrop = (e) => {
+          e.preventDefault();
+          imageDropZone.style.background = '#fafafa';
+          if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+            imageInput.files = e.dataTransfer.files;
+            handleImageUpload(e.dataTransfer.files[0]);
+          }
+        };
+        imageInput.onchange = (e) => {
+          if (e.target.files && e.target.files[0]) {
+            handleImageUpload(e.target.files[0]);
+          }
+        };
+        function handleImageUpload(file) {
+          const reader = new FileReader();
+          reader.onload = function(e) {
+            previewImage.style.display = 'block';
+            previewImage.innerHTML = `<img src="${e.target.result}" style="max-width:100%; max-height:80px; border-radius:8px;">`;
+            imageDropText.style.display = 'none';
+          };
+          reader.readAsDataURL(file);
         }
-        .post img {
-            max-width: 120px;
-            max-height: 120px;
-            border-radius: 10px;
-            margin-bottom: 8px;
-            box-shadow: 0 2px 8px rgba(247,183,49,0.12);
+
+        reportForm.onsubmit = function(e) {
+          e.preventDefault();
+          const reportType = document.getElementById('reportType').value;
+          const district = document.getElementById('district').value;
+          const content = document.getElementById('content').value.trim();
+          let imageData = '';
+          if (imageInput.files && imageInput.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(ev) {
+              imageData = ev.target.result;
+              saveReport(reportType, district, content, imageData);
+            };
+            reader.readAsDataURL(imageInput.files[0]);
+          } else {
+            saveReport(reportType, district, content, '');
+          }
+        };
+        function saveReport(reportType, district, content, imageData) {
+          if (!content || !reportType || !district) return;
+          var reports = JSON.parse(localStorage.getItem('reports') || '[]');
+          var uniqueId = Date.now().toString() + Math.random().toString(36).substr(2, 9);
+          reports.push({ id: uniqueId, reportType: reportType, district: district, content: content, imageData: imageData, date: new Date().toLocaleString() });
+          localStorage.setItem('reports', JSON.stringify(reports));
+          reportModal.style.display = 'none';
+          reportForm.reset();
+          previewImage.style.display = 'none';
+          imageDropText.style.display = 'block';
+          imageInput.value = '';
+          alert('제보가 등록되었습니다!');
+          // 커뮤니티 카드 즉시 갱신
+          if (typeof renderCommunityCards === 'function') renderCommunityCards();
         }
-        .post .meta {
-            color: #888;
-            font-size: 0.95em;
-            margin-bottom: 6px;
+      });
+      // 구별 색상 및 아이콘
+      const guStyle = {
+  '동구': { color: '#d35400', emoji: '', img: 'donggu.png' },
+  '중구': { color: '#8e44ad', emoji: '', img: 'junggu.png' },
+  '서구': { color: '#2980b9', emoji: '', img: 'seogu.png' },
+  '유성구': { color: '#27ae60', emoji: '', img: 'yousunggu.png' },
+  '대덕구': { color: '#7f8c8d', emoji: '', img: 'daeduckgu.png' }
+      };
+
+      // 제보 데이터 불러오기
+      function getReports() {
+        try {
+          return JSON.parse(localStorage.getItem('reports') || '[]');
+        } catch(e) { return []; }
+      }
+      function setReports(reports) {
+        localStorage.setItem('reports', JSON.stringify(reports));
+      }
+
+      // 댓글 데이터 (제보별 id 기반)
+      function getComments(id) {
+        try {
+          return JSON.parse(localStorage.getItem('comments_' + id) || '[]');
+        } catch(e) { return []; }
+      }
+      function addComment(id, text) {
+        const comments = getComments(id);
+        comments.push({ text, date: new Date().toLocaleString() });
+        localStorage.setItem('comments_' + id, JSON.stringify(comments));
+      }
+      function deleteComment(id, idx) {
+        const comments = getComments(id);
+        comments.splice(idx, 1);
+        localStorage.setItem('comments_' + id, JSON.stringify(comments));
+      }
+
+      // 추천 데이터 (제보별 id 기반, 브라우저별 중복 방지)
+      function getLikes(id) {
+        return parseInt(localStorage.getItem('likes_' + id) || '0');
+      }
+      function addLike(id) {
+        if (localStorage.getItem('liked_' + id)) return false;
+        localStorage.setItem('likes_' + id, getLikes(id) + 1);
+        localStorage.setItem('liked_' + id, '1');
+        return true;
+      }
+
+      // 구별로 그룹화
+      function groupByGu(reports) {
+        const grouped = {};
+        reports.forEach(r => {
+          if (!grouped[r.district]) grouped[r.district] = [];
+          grouped[r.district].push(r);
+        });
+        return grouped;
+      }
+
+      // 카드 렌더링
+      function renderCommunityCards() {
+        const reports = getReports();
+        const grouped = groupByGu(reports);
+        const container = document.getElementById('community-cards');
+        if (reports.length === 0) {
+          container.innerHTML = `<div style="text-align:center; color:#888; font-size:1.1em; margin:48px 0;">아직 등록된 안전 제보가 없습니다.<br>상단 '안전 제보하기' 버튼을 눌러 첫 제보를 남겨보세요!</div>`;
+          return;
         }
-        .post .type {
-            color: #f7b731;
-            font-weight: bold;
-            margin-right: 8px;
-        }
-        .post .district {
-            color: #27ae60;
-            font-weight: bold;
-            margin-right: 8px;
-        }
-        .post .date {
-            color: #aaa;
-            font-size: 0.92em;
-        }
-        .post .content {
-            margin-bottom: 10px;
-            font-size: 1.08em;
-        }
-        </style>
-    <script src="main.js"></script>
+        let html = '';
+        Object.keys(grouped).forEach(gu => {
+          const style = guStyle[gu] || { color: '#ffe066', emoji: '🏙️' };
+          html += `<div class="gu-group" style="margin-bottom:32px;">
+            <h3 style="color:${style.color}; font-size:1.18em; font-weight:700; margin-bottom:12px; display:flex; align-items:center; gap:8px;">
+              ${style.img ? `<img src="${style.img}" alt="${gu}" style="height:32px; vertical-align:middle;">` : `<span style="font-size:1.5em;">${style.emoji}</span>`} ${gu}
+            </h3>
+            <div class="gu-box" style="background:#fff; border-radius:24px; box-shadow:0 2px 12px rgba(0,0,0,0.06); padding:24px 18px; margin-bottom:8px;">
+              <div class="card-list" style="display:flex; flex-wrap:wrap; gap:18px;">
+                ${grouped[gu].map((r) => {
+                  const reportId = r.id;
+                  const likes = getLikes(reportId);
+                  const comments = getComments(reportId);
+                  return `
+                  <div class="report-card" style="background:#fffbe6; border-radius:16px; box-shadow:0 2px 12px rgba(0,0,0,0.08); border:2px solid ${style.color}; padding:18px 16px; min-width:220px; max-width:260px; font-size:1em; position:relative; display:flex; flex-direction:column; gap:8px;">
+                    <div style="display:flex; align-items:center; gap:8px; justify-content:space-between;">
+                      <div style="display:flex; align-items:center; gap:8px;">
+                        <img src="dream_family_02.png" alt="꿈돌이 가족" style="height:28px; vertical-align:middle;">
+                        <span style="font-weight:600; color:${style.color};">${r.reportType}</span>
+                      </div>
+                      <button class="delete-btn" data-id="${reportId}" style="background:#ffb4b4; border:none; border-radius:8px; padding:2px 10px; font-size:0.95em; color:#fff; cursor:pointer;">삭제</button>
+                    </div>
+                    <div style="color:#222; font-size:1.08em; margin-bottom:4px;">${r.content}</div>
+                    ${r.imageData ? `<img src="${r.imageData}" alt="첨부사진" style="max-width:100%; max-height:80px; border-radius:8px; margin-bottom:4px;">` : ''}
+                    <div style="color:#888; font-size:0.98em;">${r.date}</div>
+                    <div style="display:flex; align-items:center; gap:10px; margin-top:4px;">
+                      <button class="like-btn" data-id="${reportId}" style="background:#ffe066; border:none; border-radius:8px; padding:2px 10px; font-size:1em; color:#e67e22; cursor:pointer; display:flex; align-items:center; gap:4px;">
+                        <span style="font-size:1.2em;">💖</span> <span class="like-count">${likes}</span>
+                      </button>
+                    </div>
+                    <div class="comment-section" style="margin-top:8px;">
+                      <div class="comment-list" style="margin-bottom:6px;">
+                        ${comments.map((c, cidx) => `
+                          <div style="background:#fff; border-radius:8px; box-shadow:0 1px 4px rgba(0,0,0,0.04); padding:6px 10px; margin-bottom:4px; display:flex; align-items:center; justify-content:space-between; gap:8px;">
+                            <span style="font-size:0.98em; color:#222;">${c.text}</span>
+                            <span style="color:#888; font-size:0.92em;">${c.date}</span>
+                            <button class="comment-delete-btn" data-id="${reportId}" data-cidx="${cidx}" style="background:#ffe066; border:none; border-radius:6px; padding:2px 8px; font-size:0.92em; color:#e67e22; cursor:pointer;">삭제</button>
+                          </div>
+                        `).join('')}
+                      </div>
+                      <form class="comment-form" data-id="${reportId}" style="display:flex; gap:6px;">
+                        <input type="text" name="comment" placeholder="댓글을 입력하세요" style="flex:1; border-radius:8px; border:1.5px solid #ffe066; padding:6px 10px; font-size:1em;">
+                        <button type="submit" style="background:#6fcf97; color:#fff; border:none; border-radius:8px; padding:6px 14px; font-size:1em; font-weight:600; cursor:pointer;">등록</button>
+                      </form>
+                    </div>
+                  </div>
+                  `;
+                }).join('')}
+              </div>
+            </div>
+          </div>`;
+        });
+        container.innerHTML = html;
+
+        // 삭제 버튼 이벤트
+        document.querySelectorAll('.delete-btn').forEach(btn => {
+          btn.onclick = function() {
+            const id = this.getAttribute('data-id');
+            let reports = getReports();
+            // id가 없는 경우(이전 데이터)는 idx로 삭제
+            if (!id || id === 'undefined') {
+              // 버튼이 속한 카드의 내용, 날짜, 구를 기준으로 삭제
+              const card = this.closest('.report-card');
+              const content = card.querySelector('div[style*="color:#222"]').textContent;
+              const date = card.querySelector('div[style*="color:#888"]').textContent;
+              const gu = card.closest('.gu-group').querySelector('h3').textContent.trim().replace(/^[^\uAC00-\uD7A3]+/, '');
+              reports = reports.filter(r => !(r.content === content && r.date === date && r.district === gu));
+            } else {
+              reports = reports.filter(r => r.id !== id);
+            }
+            setReports(reports);
+            renderCommunityCards();
+          };
+        });
+
+        // 추천 버튼 이벤트
+        document.querySelectorAll('.like-btn').forEach(btn => {
+          btn.onclick = function() {
+            const id = this.getAttribute('data-id');
+            if (addLike(id)) {
+              renderCommunityCards();
+            } else {
+              alert('이미 추천하셨습니다!');
+            }
+          };
+        });
+
+        // 댓글 등록 이벤트
+        document.querySelectorAll('.comment-form').forEach(form => {
+          form.onsubmit = function(e) {
+            e.preventDefault();
+            const id = this.getAttribute('data-id');
+            const input = this.querySelector('input[name="comment"]');
+            const text = input.value.trim();
+            if (text) {
+              addComment(id, text);
+              input.value = '';
+              renderCommunityCards();
+            }
+          };
+        });
+
+        // 댓글 삭제 이벤트
+        document.querySelectorAll('.comment-delete-btn').forEach(btn => {
+          btn.onclick = function() {
+            const id = this.getAttribute('data-id');
+            const cidx = parseInt(this.getAttribute('data-cidx'));
+            deleteComment(id, cidx);
+            renderCommunityCards();
+          };
+        });
+      }
+
+      document.addEventListener('DOMContentLoaded', renderCommunityCards);
+      </script>
+    </div>
+    
+  </div>
 </body>
 </html>
