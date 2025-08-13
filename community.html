@@ -100,12 +100,12 @@
   </style>
 </head>
 <body>
-  <!-- 안전 제보하기 모달 -->
+  <!-- 우리 지역 위험 제보하기 모달 -->
   <div id="reportModal" style="display:none; position:fixed; left:0; top:0; width:100vw; height:100vh; background:rgba(0,0,0,0.18); z-index:2000; align-items:center; justify-content:center;">
     <div style="background:#fff; border-radius:18px; box-shadow:0 8px 32px rgba(0,0,0,0.10); padding:38px 32px 32px 32px; min-width:340px; max-width:98vw; position:relative;">
       <button id="closeModal" style="position:absolute; top:18px; right:18px; background:none; border:none; font-size:1.6em; color:#888; cursor:pointer;">&times;</button>
       <h2 style="margin-top:0; margin-bottom:18px; font-size:1.6em; font-weight:700; color:#222; display:flex; align-items:center; gap:8px;">
-        <img src="dream_family_01.png" alt="번개" style="height:56px; width:auto; vertical-align:middle;"> 안전 제보하기
+        <img src="dream_family_01.png" alt="번개" style="height:56px; width:auto; vertical-align:middle;"> 우리 지역 위험 제보하기
       </h2>
       <form id="reportForm">
         <label for="reportType" style="font-weight:600; color:#444;">제보 유형</label><br>
@@ -140,7 +140,7 @@
     </div>
   </div>
   <!-- 오른쪽 상단 고정 안전제보하기 버튼 -->
-  <button id="floatingReportBtn" style="position:fixed; right:32px; top:80px; z-index:1200; background:#6fcf97; color:#fff; border:2px solid #27ae60; padding:16px 28px; border-radius:50px; font-size:18px; font-family:'Gowun Dodum','Pretendard','Noto Sans KR',sans-serif; box-shadow:0 4px 16px rgba(0,0,0,0.12); cursor:pointer;">안전 제보하기</button>
+  <button id="floatingReportBtn" style="position:fixed; right:32px; top:80px; z-index:1200; background:#6fcf97; color:#fff; border:2px solid #27ae60; padding:16px 28px; border-radius:50px; font-size:18px; font-family:'Gowun Dodum','Pretendard','Noto Sans KR',sans-serif; box-shadow:0 4px 16px rgba(0,0,0,0.12); cursor:pointer;">우리 지역 위험 제보하기</button>
   <nav class="nav-bar">
   <a href="index.html"><img src="daejeon_logo.png" alt="대전 로고" style="height:200px; margin-right:18px; width:auto;"></a>
       <span class="nav-item">정보공개</span>
@@ -156,7 +156,7 @@
     <div class="header-left">
       <img src="꿈돌이.png" alt="꿈돌이" class="dreamdori-animate" style="height:50px; margin-right:10px; width:auto; aspect-ratio:1/1;">
       <div class="header-title-group">
-        <h1>대안책(대전 안전 Check) - 어린이 보호 사각지대 밀도기반 군집분석 웹 서비스</h1>
+  <h1>대안책(대전 안전 <span style="color:#27ae60;font-weight:bold;">CHECK</span>) - 어린이 보호 사각지대 밀도기반 군집분석 웹 서비스</h1>
         <div class="subtitle">꿈돌이와 함께하는 안전한 통학로</div>
       </div>
     </div>
@@ -324,7 +324,7 @@
         const grouped = groupByGu(reports);
         const container = document.getElementById('community-cards');
         if (reports.length === 0) {
-          container.innerHTML = `<div style="text-align:center; color:#888; font-size:1.1em; margin:48px 0;">아직 등록된 안전 제보가 없습니다.<br>상단 '안전 제보하기' 버튼을 눌러 첫 제보를 남겨보세요!</div>`;
+          container.innerHTML = `<div style="text-align:center; color:#888; font-size:1.1em; margin:48px 0;">아직 등록된 우리 지역 위험 제보가 없습니다.<br>상단 '우리 지역 위험 제보하기' 버튼을 눌러 첫 제보를 남겨보세요!</div>`;
           return;
         }
         let html = '';
