@@ -499,6 +499,9 @@ footer {
   </header>
     <div class="main-layout">
     <aside class="sidebar">
+
+    <!-- 누적 제보 리스트 표시 영역 -->
+  <!-- 위험 제보 모음 섹션 제거됨 -->
   <!-- 실시간 안전 알림 카테고리 제거 -->
   <!-- 오른쪽 하단 고정 안전제보하기 버튼 -->
     <button id="floatingReportBtn" style="position:fixed; right:32px; top:80px; z-index:1200; background:#6fcf97; color:#fff; border:2px solid #27ae60; padding:16px 28px; border-radius:50px; font-size:18px; font-family:'Gowun Dodum','Pretendard','Noto Sans KR',sans-serif; box-shadow:0 4px 16px rgba(0,0,0,0.12); cursor:pointer;">우리 지역 위험 제보하기</button>
@@ -779,6 +782,32 @@ footer {
       imageInput.value = '';
       alert('제보가 등록되었습니다!');
       }
+    </script>
+    <script>
+    // 누적 제보 리스트 불러와서 표시
+    async function fetchReports() {
+      try {
+        const res = await fetch('/api/reports');
+        const reports = await res.json();
+        const list = document.getElementById('report-list');
+        if (!list) return;
+        if (reports.length === 0) {
+          list.innerHTML = '<div style="color:#888;">아직 등록된 제보가 없습니다.</div>';
+          return;
+        }
+        list.innerHTML = reports.map(r => `
+          <div class="community-card">
+            <div style="font-weight:600; color:#27ae60; margin-bottom:6px;">${r.district} | ${r.reportType}</div>
+            <div style="margin-bottom:8px; color:#222;">${r.content.replace(/\n/g, '<br>')}</div>
+            ${r.imageData ? `<img src="${r.imageData}" alt="첨부사진" style="max-width:100%; max-height:80px; border-radius:8px; margin-bottom:6px;">` : ''}
+            <div style="font-size:0.92em; color:#888;">${new Date(r.created_at).toLocaleString('ko-KR')}</div>
+          </div>
+        `).join('');
+      } catch (e) {
+        document.getElementById('report-list').innerHTML = '<div style="color:#888;">제보 목록을 불러올 수 없습니다.</div>';
+      }
+    }
+    document.addEventListener('DOMContentLoaded', fetchReports);
     </script>
     <script src="main.js"></script>
   </body>
