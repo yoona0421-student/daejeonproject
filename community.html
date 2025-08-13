@@ -270,51 +270,176 @@
   '대덕구': { color: '#7f8c8d', emoji: '', img: 'daeduckgu.png' }
       };
 
-      // 서버에서 누적 게시물 불러와서 렌더링
-      async function renderCommunityCards() {
-        const container = document.getElementById('community-cards');
+      // 제보 데이터 불러오기
+      function getReports() {
         try {
-          const res = await fetch('/api/reports');
-          const reports = await res.json();
-          if (!reports || reports.length === 0) {
-            container.innerHTML = `<div style="text-align:center; color:#888; font-size:1.1em; margin:48px 0;">아직 등록된 우리 지역 위험 제보가 없습니다.<br>상단 '우리 지역 위험 제보하기' 버튼을 눌러 첫 제보를 남겨보세요!</div>`;
-            return;
-          }
-          // 구별로 그룹화
-          const grouped = {};
-          reports.forEach(r => {
-            if (!grouped[r.district]) grouped[r.district] = [];
-            grouped[r.district].push(r);
-          });
-          let html = '';
-          Object.keys(grouped).forEach(gu => {
-            const style = guStyle[gu] || { color: '#ffe066', emoji: '🏙️' };
-            html += `<div class="gu-group" style="margin-bottom:32px;">
-              <h3 style="color:${style.color}; font-size:1.18em; font-weight:700; margin-bottom:12px; display:flex; align-items:center; gap:8px;">
-                ${style.img ? `<img src="${style.img}" alt="${gu}" style="height:32px; vertical-align:middle;">` : `<span style="font-size:1.5em;">${style.emoji}</span>`} ${gu}
-              </h3>
-              <div class="gu-box" style="background:#fff; border-radius:24px; box-shadow:0 2px 12px rgba(0,0,0,0.06); padding:24px 18px; margin-bottom:8px;">
-                <div class="card-list" style="display:flex; flex-wrap:wrap; gap:18px;">
-                  ${grouped[gu].map((r) => `
-                    <div class="report-card" style="background:#fffbe6; border-radius:16px; box-shadow:0 2px 12px rgba(0,0,0,0.08); border:2px solid ${style.color}; padding:18px 16px; min-width:220px; max-width:260px; font-size:1em; position:relative; display:flex; flex-direction:column; gap:8px;">
+          return JSON.parse(localStorage.getItem('reports') || '[]');
+        } catch(e) { return []; }
+      }
+      function setReports(reports) {
+        localStorage.setItem('reports', JSON.stringify(reports));
+      }
+
+      // 댓글 데이터 (제보별 id 기반)
+      function getComments(id) {
+        try {
+          return JSON.parse(localStorage.getItem('comments_' + id) || '[]');
+        } catch(e) { return []; }
+      }
+      function addComment(id, text) {
+        const comments = getComments(id);
+        comments.push({ text, date: new Date().toLocaleString() });
+        localStorage.setItem('comments_' + id, JSON.stringify(comments));
+      }
+      function deleteComment(id, idx) {
+        const comments = getComments(id);
+        comments.splice(idx, 1);
+        localStorage.setItem('comments_' + id, JSON.stringify(comments));
+      }
+
+      // 추천 데이터 (제보별 id 기반, 브라우저별 중복 방지)
+      function getLikes(id) {
+        return parseInt(localStorage.getItem('likes_' + id) || '0');
+      }
+      function addLike(id) {
+        if (localStorage.getItem('liked_' + id)) return false;
+        localStorage.setItem('likes_' + id, getLikes(id) + 1);
+        localStorage.setItem('liked_' + id, '1');
+        return true;
+      }
+
+      // 구별로 그룹화
+      function groupByGu(reports) {
+        const grouped = {};
+        reports.forEach(r => {
+          if (!grouped[r.district]) grouped[r.district] = [];
+          grouped[r.district].push(r);
+        });
+        return grouped;
+      }
+
+      // 카드 렌더링
+      function renderCommunityCards() {
+        const reports = getReports();
+        const grouped = groupByGu(reports);
+        const container = document.getElementById('community-cards');
+        if (reports.length === 0) {
+          container.innerHTML = `<div style="text-align:center; color:#888; font-size:1.1em; margin:48px 0;">아직 등록된 우리 지역 위험 제보가 없습니다.<br>상단 '우리 지역 위험 제보하기' 버튼을 눌러 첫 제보를 남겨보세요!</div>`;
+          return;
+        }
+        let html = '';
+        Object.keys(grouped).forEach(gu => {
+          const style = guStyle[gu] || { color: '#ffe066', emoji: '🏙️' };
+          html += `<div class="gu-group" style="margin-bottom:32px;">
+            <h3 style="color:${style.color}; font-size:1.18em; font-weight:700; margin-bottom:12px; display:flex; align-items:center; gap:8px;">
+              ${style.img ? `<img src="${style.img}" alt="${gu}" style="height:32px; vertical-align:middle;">` : `<span style="font-size:1.5em;">${style.emoji}</span>`} ${gu}
+            </h3>
+            <div class="gu-box" style="background:#fff; border-radius:24px; box-shadow:0 2px 12px rgba(0,0,0,0.06); padding:24px 18px; margin-bottom:8px;">
+              <div class="card-list" style="display:flex; flex-wrap:wrap; gap:18px;">
+                ${grouped[gu].map((r) => {
+                  const reportId = r.id;
+                  const likes = getLikes(reportId);
+                  const comments = getComments(reportId);
+                  return `
+                  <div class="report-card" style="background:#fffbe6; border-radius:16px; box-shadow:0 2px 12px rgba(0,0,0,0.08); border:2px solid ${style.color}; padding:18px 16px; min-width:220px; max-width:260px; font-size:1em; position:relative; display:flex; flex-direction:column; gap:8px;">
+                    <div style="display:flex; align-items:center; gap:8px; justify-content:space-between;">
                       <div style="display:flex; align-items:center; gap:8px;">
                         <img src="dream_family_02.png" alt="꿈돌이 가족" style="height:28px; vertical-align:middle;">
                         <span style="font-weight:600; color:${style.color};">${r.reportType}</span>
                       </div>
-                      <div style="color:#222; font-size:1.08em; margin-bottom:4px;">${r.content}</div>
-                      ${r.imageData ? `<img src="${r.imageData}" alt="첨부사진" style="max-width:100%; max-height:80px; border-radius:8px; margin-bottom:4px;">` : ''}
-                      <div style="color:#888; font-size:0.98em;">${r.created_at ? new Date(r.created_at).toLocaleString('ko-KR') : ''}</div>
+                      <button class="delete-btn" data-id="${reportId}" style="background:#ffb4b4; border:none; border-radius:8px; padding:2px 10px; font-size:0.95em; color:#fff; cursor:pointer;">삭제</button>
                     </div>
-                  `).join('')}
-                </div>
+                    <div style="color:#222; font-size:1.08em; margin-bottom:4px;">${r.content}</div>
+                    ${r.imageData ? `<img src="${r.imageData}" alt="첨부사진" style="max-width:100%; max-height:80px; border-radius:8px; margin-bottom:4px;">` : ''}
+                    <div style="color:#888; font-size:0.98em;">${r.date}</div>
+                    <div style="display:flex; align-items:center; gap:10px; margin-top:4px;">
+                      <button class="like-btn" data-id="${reportId}" style="background:#ffe066; border:none; border-radius:8px; padding:2px 10px; font-size:1em; color:#e67e22; cursor:pointer; display:flex; align-items:center; gap:4px;">
+                        <span style="font-size:1.2em;">💖</span> <span class="like-count">${likes}</span>
+                      </button>
+                    </div>
+                    <div class="comment-section" style="margin-top:8px;">
+                      <div class="comment-list" style="margin-bottom:6px;">
+                        ${comments.map((c, cidx) => `
+                          <div style="background:#fff; border-radius:8px; box-shadow:0 1px 4px rgba(0,0,0,0.04); padding:6px 10px; margin-bottom:4px; display:flex; align-items:center; justify-content:space-between; gap:8px;">
+                            <span style="font-size:0.98em; color:#222;">${c.text}</span>
+                            <span style="color:#888; font-size:0.92em;">${c.date}</span>
+                            <button class="comment-delete-btn" data-id="${reportId}" data-cidx="${cidx}" style="background:#ffe066; border:none; border-radius:6px; padding:2px 8px; font-size:0.92em; color:#e67e22; cursor:pointer;">삭제</button>
+                          </div>
+                        `).join('')}
+                      </div>
+                      <form class="comment-form" data-id="${reportId}" style="display:flex; gap:6px;">
+                        <input type="text" name="comment" placeholder="댓글을 입력하세요" style="flex:1; border-radius:8px; border:1.5px solid #ffe066; padding:6px 10px; font-size:1em;">
+                        <button type="submit" style="background:#6fcf97; color:#fff; border:none; border-radius:8px; padding:6px 14px; font-size:1em; font-weight:600; cursor:pointer;">등록</button>
+                      </form>
+                    </div>
+                  </div>
+                  `;
+                }).join('')}
               </div>
-            </div>`;
-          });
-          container.innerHTML = html;
-        } catch (e) {
-          container.innerHTML = `<div style='color:red; text-align:center; margin:48px 0;'>제보 목록을 불러올 수 없습니다.</div>`;
-        }
+            </div>
+          </div>`;
+        });
+        container.innerHTML = html;
+
+        // 삭제 버튼 이벤트
+        document.querySelectorAll('.delete-btn').forEach(btn => {
+          btn.onclick = function() {
+            const id = this.getAttribute('data-id');
+            let reports = getReports();
+            // id가 없는 경우(이전 데이터)는 idx로 삭제
+            if (!id || id === 'undefined') {
+              // 버튼이 속한 카드의 내용, 날짜, 구를 기준으로 삭제
+              const card = this.closest('.report-card');
+              const content = card.querySelector('div[style*="color:#222"]').textContent;
+              const date = card.querySelector('div[style*="color:#888"]').textContent;
+              const gu = card.closest('.gu-group').querySelector('h3').textContent.trim().replace(/^[^\uAC00-\uD7A3]+/, '');
+              reports = reports.filter(r => !(r.content === content && r.date === date && r.district === gu));
+            } else {
+              reports = reports.filter(r => r.id !== id);
+            }
+            setReports(reports);
+            renderCommunityCards();
+          };
+        });
+
+        // 추천 버튼 이벤트
+        document.querySelectorAll('.like-btn').forEach(btn => {
+          btn.onclick = function() {
+            const id = this.getAttribute('data-id');
+            if (addLike(id)) {
+              renderCommunityCards();
+            } else {
+              alert('이미 추천하셨습니다!');
+            }
+          };
+        });
+
+        // 댓글 등록 이벤트
+        document.querySelectorAll('.comment-form').forEach(form => {
+          form.onsubmit = function(e) {
+            e.preventDefault();
+            const id = this.getAttribute('data-id');
+            const input = this.querySelector('input[name="comment"]');
+            const text = input.value.trim();
+            if (text) {
+              addComment(id, text);
+              input.value = '';
+              renderCommunityCards();
+            }
+          };
+        });
+
+        // 댓글 삭제 이벤트
+        document.querySelectorAll('.comment-delete-btn').forEach(btn => {
+          btn.onclick = function() {
+            const id = this.getAttribute('data-id');
+            const cidx = parseInt(this.getAttribute('data-cidx'));
+            deleteComment(id, cidx);
+            renderCommunityCards();
+          };
+        });
       }
+
       document.addEventListener('DOMContentLoaded', renderCommunityCards);
       </script>
     </div>
