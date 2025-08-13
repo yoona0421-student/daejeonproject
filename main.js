@@ -435,3 +435,30 @@ function renderTop5Risk() {
   var el = document.getElementById('top5RiskBox');
   if (el) el.innerHTML = html;
 }
+
+
+
+// 기존 실시간 뉴스 알림 박스(mini-news-list)에 뉴스 렌더링
+async function loadMiniNewsList() {
+  try {
+    const res = await fetch('/api/news');
+    const newsList = await res.json();
+    const container = document.getElementById('mini-news-list');
+    if (!container) return;
+    if (!newsList || newsList.length === 0) {
+      container.innerHTML = '<div style="padding:16px; color:#888;">대전 관련 실시간 뉴스가 없습니다.</div>';
+      return;
+    }
+    container.innerHTML = newsList.map(news =>
+      `<div style="margin-bottom:18px;">
+        <a href="${news.link}" target="_blank" style="font-weight:500;color:#1976d2;text-decoration:none;">${news.title}</a><br>
+        <span style="font-size:0.95em;color:#888;">${news.pubDate}</span>
+      </div>`
+    ).join('');
+  } catch (err) {
+    if (document.getElementById('mini-news-list')) {
+      document.getElementById('mini-news-list').innerHTML = '<div style="color:red;">뉴스를 불러올 수 없습니다.</div>';
+    }
+  }
+}
+window.addEventListener('DOMContentLoaded', loadMiniNewsList);
